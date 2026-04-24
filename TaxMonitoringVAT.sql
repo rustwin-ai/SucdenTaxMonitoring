@@ -71,7 +71,7 @@ cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef as money) as value_tax_sales_f
 '' as amount_tracking,
  (ROW_NUMBER() OVER(ORDER BY SalesBookTrans_RU.RecId))   AS order_no,
 --'?' as id,
-left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'���������' else  N'����� �������� ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
+left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end as account_code,
 
 Upper(SalesBookTrans_RU.dataAreaId) as balance_unit_code,
@@ -80,7 +80,7 @@ Upper(SalesBookTrans_RU.dataAreaId) as balance_unit_code,
 '' as declaration_section,
 '' as declaration_line,
 '' as opreration_code,
-N'���������� �����' as currency_name,
+N'Российский рубль' as currency_name,
 cast((FactureTrans_RU.LineAmountMST7) * T.Koef as money) as value_tax_sales_7,
 cast((FactureTrans_RU.LineAmountMST5) * T.Koef as money) as value_tax_sales_5,
 cast(FactureTrans_RU.VATMST7 * T.Koef as money) as amount_vat_7,
@@ -180,7 +180,7 @@ left join  (
 	--and SUC_TaxMonMapVATTable.TransTypeCode = FACTUREJOUR_RU.OperationTypeCodes
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
 	and (SUC_TaxMonMapVATTable.LEDGERDIMENSION = TaxLedgerAccountGroup.TaxOutgoingLedgerDimension or 
-		(FactureTrans_RU.TaxCode like N'�������%' and SUC_TaxMonMapVATTable.LEDGERDIMENSION = 0))		
+		(FactureTrans_RU.TaxCode like N'Экспорт%' and SUC_TaxMonMapVATTable.LEDGERDIMENSION = 0))		
     GROUP BY 
         FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, MARKUPREFRECID, MARKUPREFTABLEID,SUC_TaxMonMapVATTable.TransTypeCode , corr.MAINACCOUNT
     
@@ -205,7 +205,7 @@ on GeneralJournalAccountEntry.GeneralJournalEntry =
         WHEN (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) and (GeneralJournalAccountEntry.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT 
 		and ((abs(FactureTrans_RU.VAT)  =  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount)) 
 		or (abs(FactureTrans_RU.VAT)  =  abs(GeneralJournalAccountEntry.TransactionCurrencyAmount))
-		or (/*�-006233 TSZ*/FACTUREJOUR_RU.FactureTax = abs(GeneralJournalAccountEntry.ReportingCurrencyAmount) and abs(FactureTrans_RU.VAT)  <  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount))
+		or (/*Ф-006233 TSZ*/FACTUREJOUR_RU.FactureTax = abs(GeneralJournalAccountEntry.ReportingCurrencyAmount) and abs(FactureTrans_RU.VAT)  <  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount))
 		)
 		) then GeneralJournalEntry.RecId
         when  (SalesBookTrans_RU.TaxAmountVAT20 = 0  and  SalesBookTrans_RU.TaxAmountVAT10 = 0) and GeneralJournalAccountEntry.PostingType in (31, 217) then GeneralJournalEntry.RecId
@@ -257,7 +257,9 @@ outer  apply  (select (select top 1  SUC_TaxMonCounterpartyExportHistory.Counter
 						as company_code
 						)  company_code
 
+
 where
 SalesBookTable_RU.ClosingDate >= @fromdate
 and SalesBookTable_RU.ClosingDate <= @todate
 order by SalesBookTrans_RU.recId
+
