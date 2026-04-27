@@ -198,7 +198,7 @@ select
 ) FactureTrans_RU
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
-and FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes 
+and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
 and (FactureTrans_RU.Invoiceid = VENDTRANS.INVOICE or isnull(VENDTRANS.INVOICE, '') = '' or VENDTRANS.INVOICE = '')
 
 
