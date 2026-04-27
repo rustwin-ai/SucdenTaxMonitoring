@@ -4,7 +4,6 @@ set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
 
 select 
-
 '' as report_package_code, 
 year(PURCHBOOKTRANS_RU.FactureDate) as vat_year,
 format(month(PURCHBOOKTRANS_RU.FactureDate),'00') as vat_month,
