@@ -74,7 +74,7 @@ strUnitQuantity.strUnitQuantity as quantity_tracking,
 strPurchaseAmount.strPurchaseAmount as amount_tracking,
 /*PURCHBOOKTRANS_RU.LineNum  DENSE_RANK() OVER (PARTITION BY PURCHBOOKTable_RU.Recid  ORDER BY PURCHBOOKTRANS_RU.RecId)*/ (ROW_NUMBER() OVER(ORDER BY PURCHBOOKTRANS_RU.RecId)) + case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18'  then 10000 else 0 end AS order_no,
 --'?' as id,
-left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
+left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'РќР°РєР»Р°РґРЅР°СЏ' else  N'РћР±С‰РёР№ РґРѕРєСѓРјРµРЅС‚ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 left(case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end, 10) as account_code,
 Upper(PURCHBOOKTRANS_RU.dataAreaId) as balance_unit_code,
 'false' as szpk_sign,
@@ -82,7 +82,7 @@ Upper(PURCHBOOKTRANS_RU.dataAreaId) as balance_unit_code,
 '' as declaration_section,
 '' as declaration_line,
 '' as opreration_code,
-/*ISOCurrencyCode.ISOCURRENCYNAME*/ N'Российский рубль' as currency_name,
+/*ISOCurrencyCode.ISOCURRENCYNAME*/ N'Р РѕСЃСЃРёР№СЃРєРёР№ СЂСѓР±Р»СЊ' as currency_name,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST7) * T.Koef as money) else  0 end as value_tax_sales_7,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST5) * T.Koef as money) else  0 end as   value_tax_sales_5,
 
@@ -99,9 +99,8 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 '' as transaction_acc_number_part_pay,
 '' as transaction_acc_item_part_pay,
 '' as number_invoice_part_pay_id,
-cast((FactureTrans_RU.LineAmountMST22) * T.Koef as money)  as value_tax_sales_22,
-cast((FactureTrans_RU.VATMST22) * T.Koef  as money) as amount_vat_22
-
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST22) * T.Koef  as money)  else  0 end  as value_tax_sales_22,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST22) * T.Koef   as money) else  0 end as amount_vat_22
 
 from PURCHBOOKTRANS_RU
 join PURCHBOOKTABLE_RU
