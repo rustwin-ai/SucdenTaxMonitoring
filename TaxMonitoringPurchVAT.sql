@@ -129,9 +129,10 @@ and CustSettlement.OFFSETRECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef
 
 left join  (
 select 
-                SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,
-                FactureTrans_RU.FactureId as 'FactureId',
-		FactureTrans_RU.Module as 'Module',
+    InventTransPosting.LEDGERDIMENSION as LEDGERDIMENSION,            
+	SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,
+    FactureTrans_RU.FactureId as 'FactureId',
+	FactureTrans_RU.Module as 'Module',
                 FactureTrans_RU.Invoiceid as Invoiceid,
 		MAINACCOUNT as MAINACCOUNT,
 		TaxObjectName as TaxObjectName,	
@@ -190,6 +191,14 @@ select
 	--and SUC_TaxMonMapVATTable.TransTypeCode = FACTUREJOUR_RU.OperationTypeCodes
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
 	and SUC_TaxMonMapVATTable.LEDGERDIMENSION = DimensionAttributeValueCombination.RECID
+
+	left join InventtransOrigin 
+	on InventtransOrigin.INVENTTRANSID = FactureTrans_RU.INVENTTRANSID
+	and FactureTrans_RU.TAXAMOUNTMST = 0
+	and FactureTrans_RU.INVENTTRANSID != ''
+	left join InventTransPosting 
+	on InventTransPosting.INVENTTRANSORIGIN = InventtransOrigin.RECID
+	and InventTransPosting.InventTransPostingType = 1
 		
     GROUP BY 
         FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
@@ -213,11 +222,8 @@ on GeneralJournalAccountEntry.GeneralJournalEntry =
 
     CASE 
         WHEN (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) and (GeneralJournalAccountEntry.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT ) then GeneralJournalEntry.RecId
-        --when  (PURCHBOOKTRANS_RU.TaxAmountVAT20 = 0  and  PURCHBOOKTRANS_RU.TaxAmountVAT10 = 0) and GeneralJournalAccountEntry.PostingType = 41 then GeneralJournalEntry.RecId
-		--when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (6,236, 84) then GeneralJournalEntry.RecId
-            when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (6,236, 84) and  abs(GeneralJournalAccountEntry.ACCOUNTINGCURRENCYAMOUNT) >= abs(FactureTrans_RU.LineAmountMST)  then GeneralJournalEntry.RecId
-		
-
+		when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (84) and GeneralJournalAccountEntry.LedgerDimension =FactureTrans_RU.LedgerDimension   then GeneralJournalEntry.RecId
+		when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (6,236) and abs(GeneralJournalAccountEntry.ACCOUNTINGCURRENCYAMOUNT) >= abs(FactureTrans_RU.LineAmountMST)  then GeneralJournalEntry.RecId
     	ELSE null
     END 
 left join MAINACCOUNT MA
