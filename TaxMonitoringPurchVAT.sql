@@ -201,7 +201,7 @@ select
 	and InventTransPosting.InventTransPostingType = 1
 		
     GROUP BY 
-        FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
+        InventTransPosting.LEDGERDIMENSION, FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
 
     
 ) FactureTrans_RU
