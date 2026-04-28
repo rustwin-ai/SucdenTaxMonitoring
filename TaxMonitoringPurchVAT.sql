@@ -66,7 +66,7 @@ case when PURCHBOOKTRANS_RU.CORRECTIONTYPE = 1 then case when isnull(RevVT.Trans
 '' as number_doc_pay_vat,
 '' as date_doc_pay_vat,
 case when PURCHBOOKTRANS_RU.CORRECTIONTYPE = 0 then  CONVERT(char(10), GeneralJournalEntry.ACCOUNTINGDATE, 126)   else  CONVERT(char(10), RevGJE.ACCOUNTINGDATE, 126) end as reg_date,
-/*PURCHBOOKTRANS_RU.AccountNum*/company_code.company_code as company_code,
+company_code.company_code as company_code,
 '' as company_agent_code,
 PURCHBOOKTRANS_RU.PaymDocumentNum as number_doc_pay,
 case when PURCHBOOKTRANS_RU.PaymentDate > 01/01/1900 then CONVERT(char(10), PURCHBOOKTRANS_RU.PaymentDate, 126) else '' end as date_doc_pay,
@@ -101,7 +101,7 @@ Upper(PURCHBOOKTRANS_RU.dataAreaId) as balance_unit_code,
 '' as declaration_section,
 '' as declaration_line,
 '' as opreration_code,
-/*ISOCurrencyCode.ISOCURRENCYNAME*/ N'Российский рубль' as currency_name,
+N'Российский рубль' as currency_name,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST7) * T.Koef as money) else  0 end as value_tax_sales_7,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST5) * T.Koef as money) else  0 end as   value_tax_sales_5,
 
@@ -234,7 +234,7 @@ select
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
---and (FactureTrans_RU.Invoiceid = VENDTRANS.INVOICE or isnull(VENDTRANS.INVOICE, '') = '' or VENDTRANS.INVOICE = '')
+and (FactureTrans_RU.Invoiceid = VendInvoice.INVOICE or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
 
 
 left join GeneralJournalEntry
