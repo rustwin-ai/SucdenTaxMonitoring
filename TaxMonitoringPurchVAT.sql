@@ -3,6 +3,31 @@ declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
 
+WITH GJAE_Rows AS
+(
+    SELECT
+        GJAE.RecId,
+        GJAE.GeneralJournalEntry,
+        GJAE.PostingType,
+        GJAE.MainAccount,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY GJAE.GeneralJournalEntry
+            ORDER BY GJAE.RecId
+        ) AS transaction_acc_item,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY GJAE.GeneralJournalEntry, GJAE.PostingType
+            ORDER BY GJAE.RecId
+        ) AS transaction_acc_item_by_posting,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY GJAE.GeneralJournalEntry, GJAE.PostingType, GJAE.MainAccount
+            ORDER BY GJAE.RecId
+        ) AS transaction_acc_item_by_posting_account
+    FROM GeneralJournalAccountEntry GJAE
+)
+
 select 
 '' as report_package_code, 
 year(PURCHBOOKTRANS_RU.FactureDate) as vat_year,
@@ -15,7 +40,7 @@ PURCHBOOKTRANS_RU.OperationTypeCodes/*FactureJour_RU.OperationTypeCodes*/ as ope
 ''as transaction_acc_report_package_code,
 year(GeneralJournalEntry.ACCOUNTINGDATE) as transaction_acc_year,
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId)) as  transaction_acc_number,
-t2.transaction_acc_item as  transaction_acc_item,
+GJAE_Row.transaction_acc_item as  transaction_acc_item,
 PURCHBOOKTRANS_RU.FactureExternalId as number_invoice,
 CONVERT(char(10), PURCHBOOKTRANS_RU.FactureDate, 126) as  date_invoice,
 '' as transaction_acc_report_package_code_rev,
@@ -45,9 +70,6 @@ case when PURCHBOOKTRANS_RU.CORRECTIONTYPE = 0 then  CONVERT(char(10), GeneralJo
 '' as company_agent_code,
 PURCHBOOKTRANS_RU.PaymDocumentNum as number_doc_pay,
 case when PURCHBOOKTRANS_RU.PaymentDate > 01/01/1900 then CONVERT(char(10), PURCHBOOKTRANS_RU.PaymentDate, 126) else '' end as date_doc_pay,
-/*PURCHBOOKTRANS_RU.CurrencyCode ISOCurrencyCode.ISOCURRENCYCODENUM*/ '643' as currency_document,
---cast((FactureTrans_RU.LineAmount   + FactureTrans_RU.VAT5  + FactureTrans_RU.VAT7 + FactureTrans_RU.VAT10 + FactureTrans_RU.VAT18 + FactureTrans_RU.VAT20) * T.Koef / h.Koef as money) as amount_currency_document,
---cast((FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20) * T.Koef / h.Koef as money) as  amount_income_rub_document,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0  then 0 else cast((FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + + FactureTrans_RU.VATMST22) * T.Koef / h.Koef as money) end as  amount_currency_document,
 cast (0  as money) as  amount_income_rub_document,
 
@@ -56,8 +78,6 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST10) * T.Koef  as money) else  0 end as   value_tax_sales_10,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST0) * T.Koef  as money)  else  0 end as value_tax_sales_0,
 
-
---cast((case when FACTUREJOUR_RU.FactureTax != 0 then  FactureTrans_RU.VATAmountMST  * (PURCHBOOKTRANS_RU.TaxAmountVAT20 + PURCHBOOKTRANS_RU.TaxAmountVAT10)/FACTUREJOUR_RU.FactureTax/(FactureTrans_RU.ExchRate/100) else 0 end) * T.Koef as money) as amount_invoice_income_rub_vat,
 
 cast(case when PURCHBOOKTRANS_RU.OperationTypeCodes != '18' then  FactureTrans_RU.VATAmountMST   * T.Koef * d.Koef else 0 end as money) as amount_invoice_income_rub_vat,
 
@@ -71,8 +91,8 @@ case when strGTDNumber.strGTDNumber = '' then  PURCHBOOKTRANS_RU.CountryGTD else
 strInventoryUnit.strInventoryUnit as quantity_code_tracking,
 strUnitQuantity.strUnitQuantity as quantity_tracking,
 strPurchaseAmount.strPurchaseAmount as amount_tracking,
-/*PURCHBOOKTRANS_RU.LineNum  DENSE_RANK() OVER (PARTITION BY PURCHBOOKTable_RU.Recid  ORDER BY PURCHBOOKTRANS_RU.RecId)*/ (ROW_NUMBER() OVER(ORDER BY PURCHBOOKTRANS_RU.RecId)) + case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18'  then 10000 else 0 end AS order_no,
---'?' as id,
+(ROW_NUMBER() OVER(ORDER BY PURCHBOOKTRANS_RU.RecId)) + case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18'  then 10000 else 0 end AS order_no,
+
 left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 left(case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end, 10) as account_code,
 Upper(PURCHBOOKTRANS_RU.dataAreaId) as balance_unit_code,
@@ -111,8 +131,15 @@ left join PURCHBOOKTABLE_RU as PURCHBOOKTABLE_RU_Corr
 on PURCHBOOKTABLE_RU_Corr.RecId = PURCHBOOKTRANS_RU.CorrectedPurchBookTable_RU 
 
 
-left join VENDTRANS as VENDTRANS
-on (PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8) and (VENDTRANS.RECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef or VENDTRANS.Recid = PURCHBOOKTRANS_RU.PaymentRecIdRef))
+--left join VENDTRANS as VENDTRANS
+--on (PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8) and (VENDTRANS.RECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef or VENDTRANS.Recid = PURCHBOOKTRANS_RU.PaymentRecIdRef))
+LEFT JOIN VENDTRANS VendInvoice
+    ON VendInvoice.RecId = PURCHBOOKTRANS_RU.InvoiceRecIdRef
+   AND PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
+
+LEFT JOIN VENDTRANS VendPayment
+    ON VendPayment.RecId = PURCHBOOKTRANS_RU.PaymentRecIdRef
+   AND PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
 
 left join FACTURETRANS_RU as FTRTaxTrans on FTRTaxTrans.FactureId = FACTUREJOUR_RU.FactureId  and FTRTaxTrans.Module = FACTUREJOUR_RU.Module and PURCHBOOKTRANS_RU.TRANSTYPE = 8
 left join LEDGERJOURNALTRANS on LEDGERJOURNALTRANS.RecId = FTRTaxTrans.MARKUPREFRECID and FTRTaxTrans.MARKUPREFTABLEID =  212  and PURCHBOOKTRANS_RU.TRANSTYPE = 8
@@ -207,11 +234,12 @@ select
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
-and (FactureTrans_RU.Invoiceid = VENDTRANS.INVOICE or isnull(VENDTRANS.INVOICE, '') = '' or VENDTRANS.INVOICE = '')
+--and (FactureTrans_RU.Invoiceid = VENDTRANS.INVOICE or isnull(VENDTRANS.INVOICE, '') = '' or VENDTRANS.INVOICE = '')
 
 
 left join GeneralJournalEntry
-on ((GeneralJournalEntry.SUBLEDGERVOUCHER = VENDTRANS.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = VENDTRANS.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)) or 
+on ((GeneralJournalEntry.SUBLEDGERVOUCHER = VendInvoice.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = VendInvoice.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)) or 
+	(GeneralJournalEntry.SUBLEDGERVOUCHER = VendPayment.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = VendPayment.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)) or 
 	(GeneralJournalEntry.SUBLEDGERVOUCHER = CustSettlement.TaxVoucher_RU  and GeneralJournalEntry.ACCOUNTINGDATE = CustSettlement.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE = 2) or 
 	(GeneralJournalEntry.SUBLEDGERVOUCHER = LEDGERJOURNALTRANS.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = LEDGERJOURNALTRANS.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE = 8))
 
@@ -248,15 +276,26 @@ on (RevGJE.SUBLEDGERVOUCHER = RevVT.VOUCHER  and RevGJE.ACCOUNTINGDATE = RevVT.T
 left join GeneralJournalAccountEntry RevGJAE
 on RevGJAE.GeneralJournalEntry = RevGJE.RecId
 and (RevGJAE.LedgerAccount like '68%' or RevGJAE.LedgerAccount like '19%')
---left join Currency
---on Currency.CURRENCYCODE = PURCHBOOKTRANS_RU.CurrencyCode  
---left join ISOCurrencyCode
---on ISOCurrencyCode.ISCCURRENCYCODEALPHA = Currency.CurrencyCodeISO
 
-cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID ) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t2
-cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t3
-cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4 and GJAE.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t4
-cross apply (select case when  t3.transaction_acc_item > 1 and t4.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
+--cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID ) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t2
+--cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t3
+--cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4 and GJAE.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t4
+LEFT JOIN GJAE_Rows GJAE_Row
+    ON GJAE_Row.RecId = GeneralJournalAccountEntry.RecId
+	and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
+
+LEFT JOIN GJAE_Rows GJAE_Row_Posting4
+    ON GJAE_Row_Posting4.RecId = GeneralJournalAccountEntry.RecId
+   AND GJAE_Row_Posting4.PostingType = 4
+   and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
+
+LEFT JOIN GJAE_Rows GJAE_Row_Posting4_MainAccount
+    ON GJAE_Row_Posting4_MainAccount.RecId = GeneralJournalAccountEntry.RecId
+   AND GJAE_Row_Posting4_MainAccount.PostingType = 4
+   AND GJAE_Row_Posting4_MainAccount.MainAccount = FactureTrans_RU.MAINACCOUNT
+   and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
+
+cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
 
 
 --cross apply (select stuff((select ',' + cast(lineGTDInfo.GTDTraceabilityNumber as varchar(max)) as strGTDNumber from (SELECT PurchBookTransTraceableInfo_RU.GTDTraceabilityNumber FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strGTDNumber) strGTDNumber
