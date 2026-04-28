@@ -260,12 +260,13 @@ left join FACTUREJOUR_RU as correctFact
 on correctFact.RECID = PURCHBOOKTRANS_RU.RefRevisedFacture
 
 OUTER APPLY
-        (
-        SELECT  TOP 1 *
-        FROM    PURCHBOOKTRANS_RU T
-        WHERE   T.FACTUREJOUR_RU = PURCHBOOKTRANS_RU.RefOriginalFacture
-        ) RevPBT
-
+(
+    SELECT TOP (1)
+        T.InvoiceRecIdRef
+    FROM PURCHBOOKTRANS_RU T
+    WHERE T.FACTUREJOUR_RU = PURCHBOOKTRANS_RU.RefOriginalFacture
+    ORDER BY T.RecId
+) RevPBT
 
 left join VENDTRANS as RevVT
 on (RevVT.RECID = RevPBT.InvoiceRecIdRef)
