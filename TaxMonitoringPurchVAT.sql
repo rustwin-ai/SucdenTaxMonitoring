@@ -259,6 +259,7 @@ on MA.RECID = GeneralJournalAccountEntry.MAINACCOUNT
 left join FACTUREJOUR_RU as correctFact
 on correctFact.RECID = PURCHBOOKTRANS_RU.RefRevisedFacture
 
+/*
 OUTER APPLY
 (
     SELECT TOP (1)
@@ -270,6 +271,16 @@ OUTER APPLY
 
 left join VENDTRANS as RevVT
 on (RevVT.RECID = RevPBT.InvoiceRecIdRef)
+	*/
+OUTER APPLY
+(
+    SELECT TOP (1)  VT.Invoice, VT.TransDate, VT.Voucher
+    FROM PURCHBOOKTRANS_RU T
+    JOIN VENDTRANS VT
+        ON VT.RecId = T.InvoiceRecIdRef
+    WHERE T.FACTUREJOUR_RU = PURCHBOOKTRANS_RU.RefOriginalFacture
+    ORDER BY T.RecId
+) RevVT
 
 left join GeneralJournalEntry RevGJE
 on (RevGJE.SUBLEDGERVOUCHER = RevVT.VOUCHER  and RevGJE.ACCOUNTINGDATE = RevVT.TRANSDATE )
