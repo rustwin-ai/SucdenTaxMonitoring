@@ -155,7 +155,7 @@ and CustSettlement.OFFSETRECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef
 
 left join  (
 select 
-    InventTransPosting.LEDGERDIMENSION as LEDGERDIMENSION,            
+         
 	SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,
     FactureTrans_RU.FactureId as 'FactureId',
 	FactureTrans_RU.Module as 'Module',
@@ -174,29 +174,29 @@ select
 		SUM(case when VatValue = '18' then VATAmountMST else 0 end) AS 'VATMST18',
 		SUM(case when VatValue = 20 then VATAmountMST else 0 end) AS 'VATMST20',
 		SUM(case when VatValue = 22 then VATAmountMST else 0 end) AS 'VATMST22',
-		SUM(case when VatValue = 5 then LineAmount else 0 end) AS 'LineAmount5',
-		SUM(case when VatValue = 7 then LineAmount else 0 end) AS 'LineAmount7',
-		SUM(case when VatValue = 10 then LineAmount else 0 end) AS 'LineAmount10',
-		SUM(case when VatValue = '18' then LineAmount else 0 end) AS 'LineAmount18',
-		SUM(case when VatValue = 20 then LineAmount else 0 end) AS 'LineAmount20',
-		SUM(case when VatValue = 0 and VATType = 1 then LineAmount else 0 end) AS 'LineAmount0',
-        SUM(case when VatValue = 0 and VATType = 0 then LineAmount else 0 end) AS 'LineAmountFree',
-		SUM(case when VatValue = 5 then LineAmountMST else 0 end) AS 'LineAmountMST5',
-		SUM(case when VatValue = 7 then LineAmountMST else 0 end) AS 'LineAmountMST7',
-		SUM(case when VatValue = 10 then LineAmountMST else 0 end) AS 'LineAmountMST10',
-		SUM(case when VatValue = '18' then LineAmountMST else 0 end) AS 'LineAmountMST18',
-		SUM(case when VatValue = 20 then LineAmountMST else 0 end) AS 'LineAmountMST20',
-				SUM(case when VatValue = 20 then LineAmountMST else 0 end) AS 'LineAmountMST22',
-		SUM(case when VatValue = 0 and VATType = 1 then LineAmountMST else 0 end) AS 'LineAmountMST0',
-                SUM(case when VatValue = 0 and VATType = 0 then LineAmountMST else 0 end) AS 'LineAmountMSTFree',
-		sum(LineAmount) as 'LineAmount',
-		sum(LineAmountMST) as 'LineAmountMST'
+		SUM(case when VatValue = 5 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount5',
+		SUM(case when VatValue = 7 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount7',
+		SUM(case when VatValue = 10 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount10',
+		SUM(case when VatValue = '18' then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount18',
+		SUM(case when VatValue = 20 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount20',
+		SUM(case when VatValue = 0 and VATType = 1 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount0',
+        SUM(case when VatValue = 0 and VATType = 0 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmountFree',
+		SUM(case when VatValue = 5 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST5',
+		SUM(case when VatValue = 7 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST7',
+		SUM(case when VatValue = 10 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST10',
+		SUM(case when VatValue = '18' then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST18',
+		SUM(case when VatValue = 20 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST20',
+				SUM(case when VatValue = 20 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST22',
+		SUM(case when VatValue = 0 and VATType = 1 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST0',
+                SUM(case when VatValue = 0 and VATType = 0 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMSTFree',
+		sum(FactureTrans_RU.LineAmount) as 'LineAmount',
+		sum(FactureTrans_RU.LineAmountMST) as 'LineAmountMST'
                 ,sum(VATAmountMST) as 'VATAmountMST'
                 ,sum(VAT) as 'VAT'
 		,max(ExchRate) as ExchRate
     FROM 
         FactureTrans_RU
-		join FACTUREJOUR_RU
+		left join FACTUREJOUR_RU
 		on FACTUREJOUR_RU.FACTUREID = FactureTrans_RU.FACTUREID
 		and FACTUREJOUR_RU.MODULE = FactureTrans_RU.MODULE
 	left join TaxTable
@@ -205,11 +205,24 @@ select
 	on TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
 	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
 	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
+
+	left join VendInvoiceTrans 
+	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
+	and VendInvoiceTrans.LINENUM = FactureTrans_RU.LINENUM
+	and FactureTrans_RU.TAXAMOUNTMST = 0
+	and FactureTrans_RU.INTERNALINVOICEID !=''
+
+	left join AccountingDistribution 
+	on AccountingDistribution.SOURCEDOCUMENTLINE = VendInvoiceTrans.SOURCEDOCUMENTLINE
+	and AccountingDistribution.NUMBER_ = 1
+
 	left join TaxLedgerAccountGroup
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
+	
 	left join DimensionAttributeValueCombination
 	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
-		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1))
+		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1) or
+		(DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0))
 	
     LEFT JOIN SUC_TaxMonMapVATTable
 	on SUC_TaxMonMapVATTable.PARTITION = FactureTrans_RU.PARTITION
@@ -218,16 +231,11 @@ select
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
 	and SUC_TaxMonMapVATTable.LEDGERDIMENSION = DimensionAttributeValueCombination.RECID
 
-	left join InventtransOrigin 
-	on InventtransOrigin.INVENTTRANSID = FactureTrans_RU.INVENTTRANSID
-	and FactureTrans_RU.TAXAMOUNTMST = 0
-	and FactureTrans_RU.INVENTTRANSID != ''
-	left join InventTransPosting 
-	on InventTransPosting.INVENTTRANSORIGIN = InventtransOrigin.RECID
-	and InventTransPosting.InventTransPostingType = 1
+
 		
     GROUP BY 
-        InventTransPosting.LEDGERDIMENSION, FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
+        --AccountingDistribution.LEDGERDIMENSION, 
+		FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
 
     
 ) FactureTrans_RU
@@ -235,24 +243,82 @@ on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
 and (FactureTrans_RU.Invoiceid = VendInvoice.INVOICE or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
+	
+OUTER APPLY
+(
+    SELECT TOP (1)
+        GJE.RecId,
+        GJE.SubledgerVoucher,
+        GJE.AccountingDate,
+        GJE.JournalCategory
+    FROM GeneralJournalEntry GJE
+    WHERE
+        (
+            PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
+            AND GJE.SUBLEDGERVOUCHER = VendInvoice.VOUCHER
+            AND GJE.ACCOUNTINGDATE = VendInvoice.TRANSDATE
+        )
+        OR
+        (
+            PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
+            AND GJE.SUBLEDGERVOUCHER = VendPayment.VOUCHER
+            AND GJE.ACCOUNTINGDATE = VendPayment.TRANSDATE
+        )
+        OR
+        (
+            PURCHBOOKTRANS_RU.TRANSTYPE = 2
+            AND GJE.SUBLEDGERVOUCHER = CustSettlement.TaxVoucher_RU
+            AND GJE.ACCOUNTINGDATE = CustSettlement.TRANSDATE
+        )
+        OR
+        (
+            PURCHBOOKTRANS_RU.TRANSTYPE = 8
+            AND GJE.SUBLEDGERVOUCHER = LEDGERJOURNALTRANS.VOUCHER
+            AND GJE.ACCOUNTINGDATE = LEDGERJOURNALTRANS.TRANSDATE
+        )
+    ORDER BY
+        CASE
+            WHEN PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
+             AND GJE.SUBLEDGERVOUCHER = VendInvoice.VOUCHER
+             AND GJE.ACCOUNTINGDATE = VendInvoice.TRANSDATE
+            THEN 1
+
+            WHEN PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
+             AND GJE.SUBLEDGERVOUCHER = VendPayment.VOUCHER
+             AND GJE.ACCOUNTINGDATE = VendPayment.TRANSDATE
+            THEN 2
+
+            WHEN PURCHBOOKTRANS_RU.TRANSTYPE = 2
+             AND GJE.SUBLEDGERVOUCHER = CustSettlement.TaxVoucher_RU
+             AND GJE.ACCOUNTINGDATE = CustSettlement.TRANSDATE
+            THEN 3
+
+            WHEN PURCHBOOKTRANS_RU.TRANSTYPE = 8
+             AND GJE.SUBLEDGERVOUCHER = LEDGERJOURNALTRANS.VOUCHER
+             AND GJE.ACCOUNTINGDATE = LEDGERJOURNALTRANS.TRANSDATE
+            THEN 4
+        END,
+        GJE.RecId
+) GeneralJournalEntry
 
 
-left join GeneralJournalEntry
-on ((GeneralJournalEntry.SUBLEDGERVOUCHER = VendInvoice.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = VendInvoice.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)) or 
-	(GeneralJournalEntry.SUBLEDGERVOUCHER = VendPayment.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = VendPayment.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)) or 
-	(GeneralJournalEntry.SUBLEDGERVOUCHER = CustSettlement.TaxVoucher_RU  and GeneralJournalEntry.ACCOUNTINGDATE = CustSettlement.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE = 2) or 
-	(GeneralJournalEntry.SUBLEDGERVOUCHER = LEDGERJOURNALTRANS.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = LEDGERJOURNALTRANS.TRANSDATE and PURCHBOOKTRANS_RU.TRANSTYPE = 8))
+CROSS APPLY
+(
+    SELECT TOP (1)
+        GJAE.RecId,
+        GJAE.GeneralJournalEntry,
+        GJAE.MainAccount,
+        GJAE.LedgerDimension,
+        GJAE.LedgerAccount,
+        GJAE.AccountingCurrencyAmount,
+        GJAE.PostingType
+    FROM GeneralJournalAccountEntry GJAE
+    WHERE GJAE.GeneralJournalEntry = GeneralJournalEntry.RecId
+      AND GJAE.MainAccount = FactureTrans_RU.MainAccount
+    ORDER BY GJAE.RecId
+) GeneralJournalAccountEntry
 
-
- join GeneralJournalAccountEntry
-on GeneralJournalAccountEntry.GeneralJournalEntry = 
-
-    CASE 
-        WHEN (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) and (GeneralJournalAccountEntry.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT ) then GeneralJournalEntry.RecId
-		when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (84) and GeneralJournalAccountEntry.LedgerDimension =FactureTrans_RU.LedgerDimension   then GeneralJournalEntry.RecId
-		when isnull(FactureTrans_RU.MAINACCOUNT,0) = 0  and FactureTrans_RU.VATAmountMST = 0 and GeneralJournalAccountEntry.PostingType in (6,236) and abs(GeneralJournalAccountEntry.ACCOUNTINGCURRENCYAMOUNT) >= abs(FactureTrans_RU.LineAmountMST)  then GeneralJournalEntry.RecId
-    	ELSE null
-    END 
+	
 left join MAINACCOUNT MA
 on MA.RECID = GeneralJournalAccountEntry.MAINACCOUNT
 
