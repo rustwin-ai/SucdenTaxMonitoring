@@ -190,7 +190,7 @@ select
 		sum(FactureTrans_RU.LineAmountMST) as 'LineAmountMST'
                 ,sum(VATAmountMST) as 'VATAmountMST'
                 ,sum(VAT) as 'VAT'
-		,max(ExchRate) as ExchRate
+		,max(FactureTrans_RU.ExchRate) as ExchRate
     FROM 
         FactureTrans_RU
 		left join FACTUREJOUR_RU
