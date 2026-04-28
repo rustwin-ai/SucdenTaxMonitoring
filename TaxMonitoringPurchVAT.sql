@@ -363,7 +363,6 @@ LEFT JOIN GJAE_Rows GJAE_Row_Posting4_MainAccount
 
 cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
 
-
 --cross apply (select stuff((select ',' + cast(lineGTDInfo.GTDTraceabilityNumber as varchar(max)) as strGTDNumber from (SELECT PurchBookTransTraceableInfo_RU.GTDTraceabilityNumber FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strGTDNumber) strGTDNumber
 outer apply (SELECT STUFF((SELECT ',' +  cast(GTDTraceabilityNumber as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
               WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
