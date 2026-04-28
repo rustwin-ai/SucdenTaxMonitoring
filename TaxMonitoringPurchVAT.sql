@@ -130,9 +130,6 @@ on FACTUREJOUR_RU.RECID = PURCHBOOKTRANS_RU.FACTUREJOUR_RU
 left join PURCHBOOKTABLE_RU as PURCHBOOKTABLE_RU_Corr 
 on PURCHBOOKTABLE_RU_Corr.RecId = PURCHBOOKTRANS_RU.CorrectedPurchBookTable_RU 
 
-
---left join VENDTRANS as VENDTRANS
---on (PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8) and (VENDTRANS.RECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef or VENDTRANS.Recid = PURCHBOOKTRANS_RU.PaymentRecIdRef))
 LEFT JOIN VENDTRANS VendInvoice
     ON VendInvoice.RecId = PURCHBOOKTRANS_RU.InvoiceRecIdRef
    AND PURCHBOOKTRANS_RU.TRANSTYPE NOT IN (2,8)
@@ -155,7 +152,7 @@ and CustSettlement.OFFSETRECID = PURCHBOOKTRANS_RU.InvoiceRecIdRef
 
 left join  (
 select 
-         
+    VendInvoiceJour.LEDGERVOUCHER as  VendInvoiceJour_LEDGERVOUCHER,
 	SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,
     FactureTrans_RU.FactureId as 'FactureId',
 	FactureTrans_RU.Module as 'Module',
@@ -208,9 +205,12 @@ select
 
 	left join VendInvoiceTrans 
 	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
-	and VendInvoiceTrans.LINENUM = FactureTrans_RU.LINENUM
-	and FactureTrans_RU.TAXAMOUNTMST = 0
-	and FactureTrans_RU.INTERNALINVOICEID !=''
+	and VendInvoiceTrans.InventTransId = FactureTrans_RU.InventTransId
+	
+	left join VendInvoiceJour
+	on VendInvoiceJour.InternalInvoiceId = VendInvoiceTrans.InternalInvoiceId
+	and VendInvoiceJour.PurchID = VendInvoiceTrans.PurchID
+	and VendInvoiceJour.INVOICEDATE = VendInvoiceTrans.INVOICEDATE
 
 	left join AccountingDistribution 
 	on AccountingDistribution.SOURCEDOCUMENTLINE = VendInvoiceTrans.SOURCEDOCUMENTLINE
@@ -220,8 +220,8 @@ select
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
 	
 	left join DimensionAttributeValueCombination
-	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
-		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1) or
+	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0  and FactureTrans_RU.TAXAMOUNTMST = 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
+		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1 and  FactureTrans_RU.TAXAMOUNTMST != 0) or
 		(DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0))
 	
     LEFT JOIN SUC_TaxMonMapVATTable
@@ -234,7 +234,7 @@ select
 
 		
     GROUP BY 
-        --AccountingDistribution.LEDGERDIMENSION, 
+        VendInvoiceJour.LEDGERVOUCHER, 
 		FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
 
     
@@ -242,7 +242,8 @@ select
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
-and (FactureTrans_RU.Invoiceid = VendInvoice.INVOICE or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
+and (FactureTrans_RU.VendInvoiceJour_LEDGERVOUCHER = VendInvoice.VOUCHER 
+or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
 	
 OUTER APPLY
 (
@@ -325,19 +326,6 @@ on MA.RECID = GeneralJournalAccountEntry.MAINACCOUNT
 left join FACTUREJOUR_RU as correctFact
 on correctFact.RECID = PURCHBOOKTRANS_RU.RefRevisedFacture
 
-/*
-OUTER APPLY
-(
-    SELECT TOP (1)
-        T.InvoiceRecIdRef
-    FROM PURCHBOOKTRANS_RU T
-    WHERE T.FACTUREJOUR_RU = PURCHBOOKTRANS_RU.RefOriginalFacture
-    ORDER BY T.RecId
-) RevPBT
-
-left join VENDTRANS as RevVT
-on (RevVT.RECID = RevPBT.InvoiceRecIdRef)
-	*/
 OUTER APPLY
 (
     SELECT TOP (1)  VT.Invoice, VT.TransDate, VT.Voucher
