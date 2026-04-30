@@ -258,38 +258,6 @@ select
 		left join FACTUREJOUR_RU
 		on FACTUREJOUR_RU.FACTUREID = FactureTrans_RU.FACTUREID
 		and FACTUREJOUR_RU.MODULE = FactureTrans_RU.MODULE
-	
-	left join TAXTRANS
-	on (TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER or  (FACTUREJOUR_RU.VOUCHER = '' and  FactureTrans_RU.INVENTTRANSID !=''))
-	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
-	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
-	and (TAXTRANS.INVENTTRANSID = FactureTrans_RU.INVENTTRANSID or (FactureTrans_RU.INVENTTRANSID =''  and FACTUREJOUR_RU.VOUCHER != '' ))
-
-	left join LEDGERJOURNALTRANS
-	on LEDGERJOURNALTRANS.RECID = FactureTrans_RU.MARKUPREFRECID
-	and FactureTrans_RU.MARKUPREFTABLEID = 212
-
-	left join VendInvoiceTrans 
-	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
-	and VendInvoiceTrans.InventTransId = FactureTrans_RU.InventTransId
-	
-	left join VendInvoiceJour
-	on VendInvoiceJour.InternalInvoiceId = VendInvoiceTrans.InternalInvoiceId
-	and VendInvoiceJour.PurchID = VendInvoiceTrans.PurchID
-	and VendInvoiceJour.INVOICEDATE = VendInvoiceTrans.INVOICEDATE
-
-	left join AccountingDistribution 
-	on ((AccountingDistribution.SOURCEDOCUMENTLINE = TAXTRANS.SOURCEDOCUMENTLINE and FactureTrans_RU.TAXAMOUNTMST != 0 ) or 
-		( AccountingDistribution.SOURCEDOCUMENTLINE =  VendInvoiceTrans.SOURCEDOCUMENTLINE and FactureTrans_RU.TAXAMOUNTMST = 0))
-	and AccountingDistribution.NUMBER_ = 1
-
-
-	
-	left join DimensionAttributeValueCombination
-	on (DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION)
-	 or 
-		(DimensionAttributeValueCombination.RecId = LEDGERJOURNALTRANS.LEDGERDIMENSION) 
-	/*
 	left join TaxTable
 	on TaxTable.taxcode = FactureTrans_RU.TaxCode
 	left join TAXTRANS
@@ -313,12 +281,10 @@ select
 	left join TaxLedgerAccountGroup
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
 	
-	
 	left join DimensionAttributeValueCombination
 	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0  and FactureTrans_RU.TAXAMOUNTMST = 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
 		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1 and  FactureTrans_RU.TAXAMOUNTMST != 0) or
 		(DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0))
-	*/
 	
     LEFT JOIN SUC_TaxMonMapVATTable
 	on SUC_TaxMonMapVATTable.PARTITION = FactureTrans_RU.PARTITION
@@ -335,7 +301,6 @@ and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
 and (FactureTrans_RU.VendInvoiceJour_LEDGERVOUCHER = VendInvoice.VOUCHER 
 or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
-	
 	
 OUTER APPLY
 (
