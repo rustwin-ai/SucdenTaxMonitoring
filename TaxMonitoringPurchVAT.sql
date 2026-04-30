@@ -3,6 +3,76 @@ declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
 
+/* 1. Prepare traceable keys */
+IF OBJECT_ID('tempdb..#TraceKeys') IS NOT NULL
+    DROP TABLE #TraceKeys;
+
+SELECT DISTINCT
+    PBT.PURCHBOOKTABLE_RU,
+    PBT.LINENUM AS PurchBookTransLineNum
+INTO #TraceKeys
+FROM PURCHBOOKTRANS_RU PBT
+JOIN PURCHBOOKTABLE_RU PBTbl
+    ON PBTbl.RecId = PBT.PURCHBOOKTABLE_RU
+WHERE PBTbl.ClosingDate >= @fromdate
+  AND PBTbl.ClosingDate < DATEADD(day, 1, @todate);
+
+
+/* 2. Prepare aggregated traceable info */
+IF OBJECT_ID('tempdb..#TraceableInfo') IS NOT NULL
+    DROP TABLE #TraceableInfo;
+
+SELECT
+    TK.PURCHBOOKTABLE_RU,
+    TK.PurchBookTransLineNum,
+
+    STUFF((
+        SELECT ',' + CAST(T1.GTDTraceabilityNumber AS varchar(max))
+        FROM PurchBookTransTraceableInfo_RU T1
+        WHERE T1.PurchBookTable_RU = TK.PURCHBOOKTABLE_RU
+          AND T1.PurchBookTransLineNum = TK.PurchBookTransLineNum
+        ORDER BY T1.RecId
+        FOR XML PATH(''), TYPE
+    ).value('.', 'nvarchar(max)'), 1, 1, '') AS strGTDNumber,
+
+    STUFF((
+        SELECT ',' + CAST(T1.InventoryUnit AS varchar(max))
+        FROM PurchBookTransTraceableInfo_RU T1
+        WHERE T1.PurchBookTable_RU = TK.PURCHBOOKTABLE_RU
+          AND T1.PurchBookTransLineNum = TK.PurchBookTransLineNum
+        ORDER BY T1.RecId
+        FOR XML PATH(''), TYPE
+    ).value('.', 'nvarchar(max)'), 1, 1, '') AS strInventoryUnit,
+
+    STUFF((
+        SELECT ',' + CAST(T1.InventoryUnitQty AS varchar(max))
+        FROM PurchBookTransTraceableInfo_RU T1
+        WHERE T1.PurchBookTable_RU = TK.PURCHBOOKTABLE_RU
+          AND T1.PurchBookTransLineNum = TK.PurchBookTransLineNum
+        ORDER BY T1.RecId
+        FOR XML PATH(''), TYPE
+    ).value('.', 'nvarchar(max)'), 1, 1, '') AS strUnitQuantity,
+
+    STUFF((
+        SELECT ',' + CAST(T1.PurchAmount AS varchar(max))
+        FROM PurchBookTransTraceableInfo_RU T1
+        WHERE T1.PurchBookTable_RU = TK.PURCHBOOKTABLE_RU
+          AND T1.PurchBookTransLineNum = TK.PurchBookTransLineNum
+        ORDER BY T1.RecId
+        FOR XML PATH(''), TYPE
+    ).value('.', 'nvarchar(max)'), 1, 1, '') AS strPurchaseAmount
+
+INTO #TraceableInfo
+FROM #TraceKeys TK;
+
+
+CREATE UNIQUE CLUSTERED INDEX IX_TraceableInfo
+ON #TraceableInfo
+(
+    PURCHBOOKTABLE_RU,
+    PurchBookTransLineNum
+);
+
 WITH GJAE_Rows AS
 (
     SELECT
@@ -86,12 +156,22 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST10) * T.Koef  as money) else  0 end as amount_vat_10,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef  as money) else  0 end as value_tax_sales_free,
 
+CASE 
+    WHEN ISNULL(TI.strGTDNumber, '') = ''
+    THEN PURCHBOOKTRANS_RU.CountryGTD
+    ELSE TI.strGTDNumber
+END AS reg_number_custom_declaration,
 
+TI.strInventoryUnit AS quantity_code_tracking,
+TI.strUnitQuantity AS quantity_tracking,
+TI.strPurchaseAmount AS amount_tracking
+/*
 case when strGTDNumber.strGTDNumber = '' then  PURCHBOOKTRANS_RU.CountryGTD else strGTDNumber.strGTDNumber  end  as reg_number_custom_declaration,
 strInventoryUnit.strInventoryUnit as quantity_code_tracking,
 strUnitQuantity.strUnitQuantity as quantity_tracking,
 strPurchaseAmount.strPurchaseAmount as amount_tracking,
 (ROW_NUMBER() OVER(ORDER BY PURCHBOOKTRANS_RU.RecId)) + case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18'  then 10000 else 0 end AS order_no,
+*/
 
 left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 left(case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end, 10) as account_code,
@@ -362,7 +442,10 @@ LEFT JOIN GJAE_Rows GJAE_Row_Posting4_MainAccount
    and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
 
 cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
-
+LEFT JOIN #TraceableInfo TI
+    ON TI.PURCHBOOKTABLE_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
+   AND TI.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
+	/*
 --cross apply (select stuff((select ',' + cast(lineGTDInfo.GTDTraceabilityNumber as varchar(max)) as strGTDNumber from (SELECT PurchBookTransTraceableInfo_RU.GTDTraceabilityNumber FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strGTDNumber) strGTDNumber
 outer apply (SELECT STUFF((SELECT ',' +  cast(GTDTraceabilityNumber as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
               WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
@@ -410,7 +493,7 @@ FROM PurchBookTransTraceableInfo_RU t
 WHERE  t.PurchBookTable_RU =  PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  
 	and t.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM 
 GROUP BY t.PurchBookTable_RU,  t.PurchBookTransLineNum) as strPurchaseAmount
-
+*/
 
 outer  apply  (select (case when PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)  then   (select top 1  SUC_TaxMonCounterpartyExportHistory.CounterpartyUniqueCode as company_code  from vendTable join SUC_TaxMonCounterpartyExportHistory on SUC_TaxMonCounterpartyExportHistory.PARTY =  vendTable.PARTY where vendTable.AccountNum = PURCHBOOKTRANS_RU.AccountNum)
 							when PURCHBOOKTRANS_RU.TRANSTYPE  in (2)  then   (select top 1  SUC_TaxMonCounterpartyExportHistory.CounterpartyUniqueCode as company_code  from custTable join SUC_TaxMonCounterpartyExportHistory on SUC_TaxMonCounterpartyExportHistory.PARTY =  custTable.PARTY where custTable.AccountNum = PURCHBOOKTRANS_RU.AccountNum)
