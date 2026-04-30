@@ -183,7 +183,7 @@ select
 		SUM(case when VatValue = 10 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST10',
 		SUM(case when VatValue = '18' then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST18',
 		SUM(case when VatValue = 20 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST20',
-				SUM(case when VatValue = 20 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST22',
+		SUM(case when VatValue = 22 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST22',
 		SUM(case when VatValue = 0 and VATType = 1 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST0',
                 SUM(case when VatValue = 0 and VATType = 0 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMSTFree',
 		sum(FactureTrans_RU.LineAmount) as 'LineAmount',
