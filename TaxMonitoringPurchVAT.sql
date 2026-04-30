@@ -164,7 +164,7 @@ END AS reg_number_custom_declaration,
 
 TI.strInventoryUnit AS quantity_code_tracking,
 TI.strUnitQuantity AS quantity_tracking,
-TI.strPurchaseAmount AS amount_tracking
+TI.strPurchaseAmount AS amount_tracking,
 /*
 case when strGTDNumber.strGTDNumber = '' then  PURCHBOOKTRANS_RU.CountryGTD else strGTDNumber.strGTDNumber  end  as reg_number_custom_declaration,
 strInventoryUnit.strInventoryUnit as quantity_code_tracking,
