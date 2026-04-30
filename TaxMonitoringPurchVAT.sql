@@ -240,24 +240,24 @@ select
 		MAINACCOUNT as MAINACCOUNT,
 		TaxObjectName as TaxObjectName,	
 
-		SUM(case when VatValue = 5 then VAT else 0 end) AS 'VAT5',
-		SUM(case when VatValue = 7 then VAT else 0 end) AS 'VAT7',
-        SUM(case when VatValue = 10 then VAT else 0 end) AS 'VAT10',
-		SUM(case when VatValue = '18' then VAT else 0 end) AS 'VAT18',
-		SUM(case when VatValue = 20 then VAT else 0 end) AS 'VAT20',
+		--SUM(case when VatValue = 5 then VAT else 0 end) AS 'VAT5',
+		--SUM(case when VatValue = 7 then VAT else 0 end) AS 'VAT7',
+        --SUM(case when VatValue = 10 then VAT else 0 end) AS 'VAT10',
+		--SUM(case when VatValue = '18' then VAT else 0 end) AS 'VAT18',
+		--SUM(case when VatValue = 20 then VAT else 0 end) AS 'VAT20',
 		SUM(case when VatValue = 5 then VATAmountMST else 0 end) AS 'VATMST5',
 		SUM(case when VatValue = 7 then VATAmountMST else 0 end) AS 'VATMST7',
 		SUM(case when VatValue = 10 then VATAmountMST else 0 end) AS 'VATMST10',
 		SUM(case when VatValue = '18' then VATAmountMST else 0 end) AS 'VATMST18',
 		SUM(case when VatValue = 20 then VATAmountMST else 0 end) AS 'VATMST20',
 		SUM(case when VatValue = 22 then VATAmountMST else 0 end) AS 'VATMST22',
-		SUM(case when VatValue = 5 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount5',
-		SUM(case when VatValue = 7 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount7',
-		SUM(case when VatValue = 10 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount10',
-		SUM(case when VatValue = '18' then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount18',
-		SUM(case when VatValue = 20 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount20',
-		SUM(case when VatValue = 0 and VATType = 1 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount0',
-        SUM(case when VatValue = 0 and VATType = 0 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmountFree',
+		--SUM(case when VatValue = 5 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount5',
+		--SUM(case when VatValue = 7 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount7',
+		--SUM(case when VatValue = 10 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount10',
+		--SUM(case when VatValue = '18' then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount18',
+		--SUM(case when VatValue = 20 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount20',
+		--SUM(case when VatValue = 0 and VATType = 1 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmount0',
+        --SUM(case when VatValue = 0 and VATType = 0 then FactureTrans_RU.LineAmount else 0 end) AS 'LineAmountFree',
 		SUM(case when VatValue = 5 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST5',
 		SUM(case when VatValue = 7 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST7',
 		SUM(case when VatValue = 10 then FactureTrans_RU.LineAmountMST else 0 end) AS 'LineAmountMST10',
@@ -437,55 +437,6 @@ cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJ
 LEFT JOIN #TraceableInfo TI
     ON TI.PURCHBOOKTABLE_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
    AND TI.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
-	/*
---cross apply (select stuff((select ',' + cast(lineGTDInfo.GTDTraceabilityNumber as varchar(max)) as strGTDNumber from (SELECT PurchBookTransTraceableInfo_RU.GTDTraceabilityNumber FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strGTDNumber) strGTDNumber
-outer apply (SELECT STUFF((SELECT ',' +  cast(GTDTraceabilityNumber as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
-              WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
-			    and t1.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
-              ORDER BY RecId
-              FOR XML PATH(''), TYPE).value('text()[1]', 'nvarchar(max)')
-        , 1, LEN(','), '') AS strGTDNumber
-FROM PurchBookTransTraceableInfo_RU t
-WHERE  t.PurchBookTable_RU =  PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  
-	and t.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM 
-GROUP BY t.PurchBookTable_RU,  t.PurchBookTransLineNum) as strGTDNumber
-
---cross apply (select stuff((select ',' + cast(lineGTDInfo.InventoryUnit as varchar(max)) as strGTDNumber from (SELECT PurchBookTransTraceableInfo_RU.InventoryUnit FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strInventoryUnit) strInventoryUnit
-outer apply (SELECT STUFF((SELECT ',' + cast(InventoryUnit  as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
-              WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
-			    and t1.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
-              ORDER BY RecId
-              FOR XML PATH(''), TYPE).value('text()[1]', 'nvarchar(max)')
-        , 1, LEN(','), '') AS strInventoryUnit
-FROM PurchBookTransTraceableInfo_RU t
-WHERE  t.PurchBookTable_RU =  PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  
-	and t.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM 
-GROUP BY t.PurchBookTable_RU,  t.PurchBookTransLineNum) as strInventoryUnit
-
---cross apply (select stuff((select ',' + cast(lineGTDInfo.InventoryUnitQty as varchar(max)) as strUnitQuantity from (SELECT PurchBookTransTraceableInfo_RU.InventoryUnitQty FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strUnitQuantity) strUnitQuantity
-outer apply (SELECT STUFF((SELECT ',' + cast(InventoryUnitQty as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
-              WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
-			    and t1.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
-              ORDER BY RecId
-              FOR XML PATH(''), TYPE).value('text()[1]', 'nvarchar(max)')
-        , 1, LEN(','), '') AS strUnitQuantity
-FROM PurchBookTransTraceableInfo_RU t
-WHERE  t.PurchBookTable_RU =  PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  
-	and t.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM 
-GROUP BY t.PurchBookTable_RU,  t.PurchBookTransLineNum) as strUnitQuantity
-
---cross apply (select stuff((select ',' + cast(lineGTDInfo.PurchAmount as varchar(max)) as strPurchaseAmount from (SELECT PurchBookTransTraceableInfo_RU.PurchAmount FROM PurchBookTransTraceableInfo_RU  WHERE PurchBookTransTraceableInfo_RU.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  AND PurchBookTransTraceableInfo_RU.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM )lineGTDInfo  for xml path ('') ), 1, 1, '') as strPurchaseAmount) strPurchaseAmount
-outer apply (SELECT STUFF((SELECT ',' + cast(PurchAmount  as varchar(max)) FROM PurchBookTransTraceableInfo_RU t1 
-              WHERE  t1.PurchBookTable_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
-			    and t1.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
-              ORDER BY RecId
-              FOR XML PATH(''), TYPE).value('text()[1]', 'nvarchar(max)')
-        , 1, LEN(','), '') AS strPurchaseAmount
-FROM PurchBookTransTraceableInfo_RU t
-WHERE  t.PurchBookTable_RU =  PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU  
-	and t.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM 
-GROUP BY t.PurchBookTable_RU,  t.PurchBookTransLineNum) as strPurchaseAmount
-*/
 
 outer  apply  (select (case when PURCHBOOKTRANS_RU.TRANSTYPE not in (2,8)  then   (select top 1  SUC_TaxMonCounterpartyExportHistory.CounterpartyUniqueCode as company_code  from vendTable join SUC_TaxMonCounterpartyExportHistory on SUC_TaxMonCounterpartyExportHistory.PARTY =  vendTable.PARTY where vendTable.AccountNum = PURCHBOOKTRANS_RU.AccountNum)
 							when PURCHBOOKTRANS_RU.TRANSTYPE  in (2)  then   (select top 1  SUC_TaxMonCounterpartyExportHistory.CounterpartyUniqueCode as company_code  from custTable join SUC_TaxMonCounterpartyExportHistory on SUC_TaxMonCounterpartyExportHistory.PARTY =  custTable.PARTY where custTable.AccountNum = PURCHBOOKTRANS_RU.AccountNum)
