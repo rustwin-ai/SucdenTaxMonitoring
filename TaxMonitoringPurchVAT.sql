@@ -310,14 +310,9 @@ select
 	--and SUC_TaxMonMapVATTable.TransTypeCode = FACTUREJOUR_RU.OperationTypeCodes
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
 	and SUC_TaxMonMapVATTable.LEDGERDIMENSION = DimensionAttributeValueCombination.RECID
-
-
-		
     GROUP BY 
         VendInvoiceJour.LEDGERVOUCHER, 
 		FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, FactureTrans_RU.Invoiceid, SUC_TaxMonMapVATTable.TransTypeCode 
-
-    
 ) FactureTrans_RU
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
@@ -423,9 +418,6 @@ left join GeneralJournalAccountEntry RevGJAE
 on RevGJAE.GeneralJournalEntry = RevGJE.RecId
 and (RevGJAE.LedgerAccount like '68%' or RevGJAE.LedgerAccount like '19%')
 
---cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID ) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t2
---cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t3
---cross apply (select case when (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4 and GJAE.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t4
 LEFT JOIN GJAE_Rows GJAE_Row
     ON GJAE_Row.RecId = GeneralJournalAccountEntry.RecId
 	and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
