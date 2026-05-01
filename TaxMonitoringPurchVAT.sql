@@ -2,7 +2,6 @@ declare @fromdate datetime;
 declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
-
 /* 1. Prepare traceable keys */
 IF OBJECT_ID('tempdb..#TraceKeys') IS NOT NULL
     DROP TABLE #TraceKeys;
@@ -258,7 +257,12 @@ select
 		left join FACTUREJOUR_RU
 		on FACTUREJOUR_RU.FACTUREID = FactureTrans_RU.FACTUREID
 		and FACTUREJOUR_RU.MODULE = FactureTrans_RU.MODULE
-	
+	left join TaxTable
+	on TaxTable.taxcode = FactureTrans_RU.TaxCode
+	left join TAXTRANS
+	on TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
+	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
+	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
 
 	left join VendInvoiceTrans 
 	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
@@ -273,30 +277,19 @@ select
 	left join AccountingDistribution 
 	on AccountingDistribution.SOURCEDOCUMENTLINE = VendInvoiceTrans.SOURCEDOCUMENTLINE
 	and AccountingDistribution.NUMBER_ = 1
-		
-	left join TaxTable
-	on TaxTable.taxcode = FactureTrans_RU.TaxCode
-	
-	left join TAXTRANS
-	on (
-	(TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER and FACTUREJOUR_RU.VOUCHER !='') 
-	or
-	(TAXTRANS.VOUCHER = VendInvoiceJour.LEDGERVOUCHER and  FactureTrans_RU.INTERNALINVOICEID !=''))
-	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
-	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
-	
+
 	left join TaxLedgerAccountGroup
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
 	
 	left join DimensionAttributeValueCombination
-	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 1  and FactureTrans_RU.TAXAMOUNTMST != 0 or isnull(TAXTRANS.RecId,0) =0 )) 
-		or (DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1 and  FactureTrans_RU.TAXAMOUNTMST != 0) 
-		or (DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0)
-		)
+	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0  and FactureTrans_RU.TAXAMOUNTMST = 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
+		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1 and  FactureTrans_RU.TAXAMOUNTMST != 0) or
+		(DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0))
 	
     LEFT JOIN SUC_TaxMonMapVATTable
 	on SUC_TaxMonMapVATTable.PARTITION = FactureTrans_RU.PARTITION
 	and SUC_TaxMonMapVATTable.TransTypeCodeSign = 1	
+	--and SUC_TaxMonMapVATTable.TransTypeCode = FACTUREJOUR_RU.OperationTypeCodes
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
 	and SUC_TaxMonMapVATTable.LEDGERDIMENSION = DimensionAttributeValueCombination.RECID
     GROUP BY 
@@ -308,7 +301,6 @@ and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
 and (FactureTrans_RU.TransTypeCode = PurchBookTrans_RU.OperationTypeCodes or  isnull(FactureTrans_RU.TransTypeCode, '') = '')
 and (FactureTrans_RU.VendInvoiceJour_LEDGERVOUCHER = VendInvoice.VOUCHER 
 or isnull(VendInvoice.INVOICE, '') = '' or VendPayment.INVOICE = '') -- for cases when we have 1 facture and 2 invoices
-
 	
 OUTER APPLY
 (
@@ -445,6 +437,7 @@ cross apply (select cast((case when PURCHBOOKTRANS_RU.TRANSTYPE != 2 then cast (
 cross apply (select cast((case when PURCHBOOKTRANS_RU.TRANSTYPE = 2 then cast ((case when s.Koef = 1 then m.Koef else ss.Koef end) as decimal(30,20)) else 1   end )as  DECIMAL(30, 20))as Koef) d
 
 where 
+
 PURCHBOOKTABLE_RU.ClosingDate >=  @fromdate
 and PURCHBOOKTABLE_RU.ClosingDate <=  @todate
 order by PURCHBOOKTRANS_RU.RecId
