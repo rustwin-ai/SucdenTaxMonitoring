@@ -268,7 +268,7 @@ select
 	left join VendInvoiceTrans 
 	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
 	and VendInvoiceTrans.InventTransId = FactureTrans_RU.InventTransId
-	and FactureTrans_RU.TAXAMOUNTMST = 0
+
 	
 	left join VendInvoiceJour
 	on VendInvoiceJour.InternalInvoiceId = VendInvoiceTrans.InternalInvoiceId
