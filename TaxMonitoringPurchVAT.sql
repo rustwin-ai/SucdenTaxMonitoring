@@ -259,11 +259,7 @@ select
 		and FACTUREJOUR_RU.MODULE = FactureTrans_RU.MODULE
 	left join TaxTable
 	on TaxTable.taxcode = FactureTrans_RU.TaxCode
-	left join TAXTRANS
-	on TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
-	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
-	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
-
+	
 	left join VendInvoiceTrans 
 	on VendInvoiceTrans.INTERNALINVOICEID = FactureTrans_RU.INTERNALINVOICEID
 	and VendInvoiceTrans.InventTransId = FactureTrans_RU.InventTransId
@@ -278,6 +274,11 @@ select
 	on AccountingDistribution.SOURCEDOCUMENTLINE = VendInvoiceTrans.SOURCEDOCUMENTLINE
 	and AccountingDistribution.NUMBER_ = 1
 
+	left join TAXTRANS
+	on TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
+	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
+	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
+	
 	left join TaxLedgerAccountGroup
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
 	
