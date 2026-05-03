@@ -283,7 +283,7 @@ select
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
 	
 	left join DimensionAttributeValueCombination
-	on ((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0  and FactureTrans_RU.TAXAMOUNTMST = 0 or isnull(TAXTRANS.TAXDIRECTION,0) =0 )) or
+	on (((DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXINCOMINGLEDGERDIMENSION and (TAXTRANS.TAXDIRECTION != 0  or isnull(TAXTRANS.TAXDIRECTION,0) =0 ) and FactureTrans_RU.TAXAMOUNTMST != 0 )) or
 		(DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TAXOUTGOINGLEDGERDIMENSION and TAXTRANS.TAXDIRECTION = 1 and  FactureTrans_RU.TAXAMOUNTMST != 0) or
 		(DimensionAttributeValueCombination.RECID = AccountingDistribution.LEDGERDIMENSION and FactureTrans_RU.TAXAMOUNTMST = 0))
 	
