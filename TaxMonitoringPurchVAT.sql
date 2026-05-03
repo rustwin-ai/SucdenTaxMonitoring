@@ -274,10 +274,20 @@ select
 	on AccountingDistribution.SOURCEDOCUMENTLINE = VendInvoiceTrans.SOURCEDOCUMENTLINE
 	and AccountingDistribution.NUMBER_ = 1
 
+	OUTER APPLY	(
+    SELECT TOP (1) TAXTRANS.TAXDIRECTION  FROM TAXTRANS 
+    WHERE
+	 TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
+	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
+	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
+	order by RecId desc
+	) TAXTRANS
+	/*
 	left join TAXTRANS
 	on TAXTRANS.VOUCHER = FACTUREJOUR_RU.VOUCHER
 	and TAXTRANS.TRANSDATE = FACTUREJOUR_RU.FACTUREDATE
 	and TAXTRANS.TAXCODE = FactureTrans_RU.TaxCode
+	*/
 	
 	left join TaxLedgerAccountGroup
 	on TaxLedgerAccountGroup.TaxAccountGroup = TaxTable.TaxAccountGroup
