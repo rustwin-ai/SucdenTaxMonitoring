@@ -426,7 +426,8 @@ LEFT JOIN GJAE_Rows GJAE_Row_Posting4_MainAccount
    AND GJAE_Row_Posting4_MainAccount.MainAccount = FactureTrans_RU.MAINACCOUNT
    and (PURCHBOOKTRANS_RU.TaxAmountVAT20 != 0  or  PURCHBOOKTRANS_RU.TaxAmountVAT10 != 0)
 
-cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
+--cross apply (select case when  GJAE_Row_Posting4.transaction_acc_item > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then  -1 else 1 end end as Koef) t
+cross apply (select case when GJAE_Row_Posting4.transaction_acc_item_by_posting > 1 and GJAE_Row_Posting4_MainAccount.transaction_acc_item_by_posting_account != 1 then 0 else case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then -1 else 1 end   end as Koef ) t	
 LEFT JOIN #TraceableInfo TI
     ON TI.PURCHBOOKTABLE_RU = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
    AND TI.PurchBookTransLineNum = PURCHBOOKTRANS_RU.LINENUM
