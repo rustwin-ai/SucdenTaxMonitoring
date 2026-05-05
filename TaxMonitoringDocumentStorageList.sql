@@ -1,7 +1,7 @@
-declare  @fromdate datetime
-declare  @todate datetime
-set @fromdate = parse('" & Text.From(Params[FromDate]{0}) & "' as datetime  USING 'ru')
-set @todate = parse('" & Text.From(Params[ToDate]{0}) & "' as datetime  USING 'ru')
+declare @fromdate datetime;
+declare @todate datetime;
+set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
+set @todate = parse('__TODATE__' as datetime using 'ru');
 
 select 
 
