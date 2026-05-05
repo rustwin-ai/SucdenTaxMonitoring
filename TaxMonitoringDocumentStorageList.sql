@@ -2,7 +2,6 @@ declare @fromdate datetime;
 declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
-
 select 
 
 docuRef.SUC_TAXMONUUID as unique_document_number,
@@ -14,7 +13,7 @@ COALESCE(VendInvoiceJour.INVOICEAMOUNT, 0) + COALESCE(CustInvoiceJour.INVOICEAMO
 COALESCE(VendInvoiceJour.SUMTAX, 0)  +  COALESCE(CustInvoiceJour.SUMTAX, 0) +  COALESCE(AgreementHeaderExt_RU.AgreementVatAmount, 0) as document_tax_sum,
 
 format( (case when isnull(AGREEMENTHEADER.RecId, 0) != 0 then nullif(DefaultAgreementLineEffectiveDate, '1900-01-01') else DATEADD(month, 3*(DATEDIFF(month, 0, VoucherDate.VoucherDate)/3), 0) end),  'dd.MM.yyyy')  as begin_date,
-format( (case when isnull(AGREEMENTHEADER.RecId, 0) != 0 then  nullif(DefaultAgreementLineExpirationDate, '1900-01-01') else DATEADD(day, -1, DATEADD(Month, 3,  DATEADD(month, 3*(DATEDIFF(month, 0, getdate())/3), 0)))  end),  'dd.MM.yyyy')  as finish_date,
+format( (case when isnull(AGREEMENTHEADER.RecId, 0) != 0 then  nullif(DefaultAgreementLineExpirationDate, '1900-01-01') else DATEADD(day, -1, DATEADD(DAY, 0, DATEADD(YEAR, DATEDIFF(YEAR, 0, VoucherDate.VoucherDate) + 1, 0)) )  end),  'dd.MM.yyyy')  as finish_date,
 case when isnull(docuRef.RecId, 0) = 0 then '' else   CONCAT ('https://',  lower(DocuRef.ACTUALCOMPANYID), '-ax-prod.sucden-russia.ru/TaxMonProd?id=', docuRef.SUC_TAXMONUUID) end as uri_body,
 DOCUVALUE.FileName + '.' + DOCUVALUE.FileType as file_name, 	
 DOCUVALUE.FileType as file_content_type,
