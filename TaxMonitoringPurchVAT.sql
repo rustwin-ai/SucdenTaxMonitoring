@@ -2,6 +2,7 @@ declare @fromdate datetime;
 declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
+/*
 /* 1. Prepare traceable keys */
 IF OBJECT_ID('tempdb..#TraceKeys') IS NOT NULL
     DROP TABLE #TraceKeys;
@@ -71,7 +72,7 @@ ON #TraceableInfo
     PURCHBOOKTABLE_RU,
     PurchBookTransLineNum
 );
-
+*/
 WITH GJAE_Rows AS
 (
     SELECT
@@ -164,9 +165,9 @@ CASE
     ELSE TI.strGTDNumber
 END AS reg_number_custom_declaration,
 
-TI.strInventoryUnit AS quantity_code_tracking,
-TI.strUnitQuantity AS quantity_tracking,
-TI.strPurchaseAmount AS amount_tracking,
+/*TI.strInventoryUnit*/ AS quantity_code_tracking,
+/*TI.strUnitQuantity*/ AS quantity_tracking,
+/*TI.strPurchaseAmount*/ AS amount_tracking,
 
 left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 left(case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end, 10) as account_code,
