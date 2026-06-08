@@ -141,6 +141,7 @@ company_code.company_code as company_code,
 '' as company_agent_code,
 PURCHBOOKTRANS_RU.PaymDocumentNum as number_doc_pay,
 case when PURCHBOOKTRANS_RU.PaymentDate > 01/01/1900 then CONVERT(char(10), PURCHBOOKTRANS_RU.PaymentDate, 126) else '' end as date_doc_pay,
+	'643' as currency_document,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0  then 0 else cast((FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + FactureTrans_RU.VATMST22) * T.Koef / h.Koef as money) end as  amount_currency_document,
 cast (0  as money) as  amount_income_rub_document,
 
