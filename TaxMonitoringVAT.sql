@@ -183,7 +183,7 @@ left join  (
 	and (SUC_TaxMonMapVATTable.LEDGERDIMENSION = TaxLedgerAccountGroup.TaxOutgoingLedgerDimension or 
 		(FactureTrans_RU.TaxCode like N'Экспорт%' and SUC_TaxMonMapVATTable.LEDGERDIMENSION = 0))		
     GROUP BY 
-        FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, MARKUPREFRECID, MARKUPREFTABLEID,SUC_TaxMonMapVATTable.TransTypeCode , corr.MAINACCOUNT
+        FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, MARKUPREFRECID, MARKUPREFTABLEID,SUC_TaxMonMapVATTable.TransTypeCode , corr.MAINACCOUNT, SIGN(LineAmountMST)
     
 ) FactureTrans_RU
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
