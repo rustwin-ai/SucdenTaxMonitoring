@@ -168,6 +168,7 @@ END AS reg_number_custom_declaration,
 /*TI.strInventoryUnit*/ '' AS quantity_code_tracking,
 /*TI.strUnitQuantity*/ '' AS quantity_tracking,
 /*TI.strPurchaseAmount*/ '' AS amount_tracking,
+ (ROW_NUMBER() OVER(ORDER BY PurchBookTrans_RU.RecId))   AS order_no,
 
 left(CASE when GeneralJournalEntry.JournalCategory in (3,2) then N'Накладная' else  N'Общий документ ' + [dbo].[ENUM2STR]('LedgerTransType', GeneralJournalEntry.JournalCategory) END, 20) as document_type,
 left(case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  else MA.MAINACCOUNTID end, 10) as account_code,
