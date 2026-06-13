@@ -18,8 +18,8 @@ from CustInvoiceJour
 join CustInvoiceJour_RU
     on CustInvoiceJour_RU.CustInvoiceJour = CustInvoiceJour.RecId
 where PostingProfile != N'Отгрузка'
-	and CustInvoiceJour_RU.InvoiceDate >= @fromdate
-	and  CustInvoiceJour_RU.InvoiceDate <= @todate
+	and CustInvoiceJour.InvoiceDate >= @fromdate
+	and  CustInvoiceJour.InvoiceDate <= @todate
   and not exists
   (
       select 1
