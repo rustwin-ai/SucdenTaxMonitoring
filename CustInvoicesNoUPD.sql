@@ -1,3 +1,8 @@
+declare @fromdate datetime;
+declare @todate datetime;
+set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
+set @todate = parse('__TODATE__' as datetime using 'ru');
+
 select 
     InvoiceAccount as 'Счет накладной',
     SalesId as 'Заказ на продажу',
@@ -13,6 +18,8 @@ from CustInvoiceJour
 join CustInvoiceJour_RU
     on CustInvoiceJour_RU.CustInvoiceJour = CustInvoiceJour.RecId
 where PostingProfile != N'Отгрузка'
+	and CustInvoiceJour_RU.InvoiceDate >= @fromdate
+	and  CustInvoiceJour_RU.InvoiceDate <= @todate
   and not exists
   (
       select 1
