@@ -9,9 +9,9 @@ select
     InvoiceId as 'Накладная',
     CONVERT(char(10), InvoiceDate, 126) as 'Дата',
     cast(InvoiceAmount as money) as 'Сумма накладной',
-    case when CustInvoiceJour_RU.FacturedFully_RU = 1 then 'Да' else 'Нет' end as 'Полностью отфактуровано',
+    case when CustInvoiceJour_RU.FacturedFully_RU = 1 then N'Да' else N'Нет' end as 'Полностью отфактуровано',
     PostingProfile as 'Профиль разноски',
-    case when Correct_RU = 1 then 'Да' else 'Нет' end as 'Корректирующий документ',
+    case when Correct_RU = 1 then N'Да' else N'Нет' end as 'Корректирующий документ',
     CorrectedInvoiceId_RU as 'Накладная',
     CONVERT(char(10), CorrectedInvoiceDate_RU, 126) as 'Дата накладной'
 from CustInvoiceJour
