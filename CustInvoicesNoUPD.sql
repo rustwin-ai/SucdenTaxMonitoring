@@ -13,7 +13,11 @@ select
     PostingProfile as 'Профиль разноски',
     case when Correct_RU = 1 then N'Да' else N'Нет' end as 'Корректирующий документ',
     CorrectedInvoiceId_RU as 'Накладная',
-    CONVERT(char(10), CorrectedInvoiceDate_RU, 126) as 'Дата накладной'
+	case 
+        when CorrectedInvoiceDate_RU = '1900-01-01' then ''
+        else CONVERT(char(10), CorrectedInvoiceDate_RU, 126)
+    end as 'Дата накладной'
+	
 from CustInvoiceJour
 join CustInvoiceJour_RU
     on CustInvoiceJour_RU.CustInvoiceJour = CustInvoiceJour.RecId
