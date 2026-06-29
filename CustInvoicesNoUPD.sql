@@ -30,6 +30,5 @@ where PostingProfile != N'Отгрузка'
       from DocuRef
       where DocuRef.RefRecId = CustInvoiceJour.RecId
         and DocuRef.RefTableId = 62 -- CustInvoiceJour table id, please verify in your environment
-        and DocuRef.TypeId = N'11.УПД'
-		and DocuRef.TypeId = N'13.УКД'
+ 		and DocuRef.TypeId not in  (N'11.УПД', N'13.УКД')
   )
