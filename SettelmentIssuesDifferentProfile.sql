@@ -7,7 +7,7 @@
     WHERE vs.ACCOUNTNUM = N'ПС-0034443'
       AND vs.DATAAREAID = 'ksz'
       AND vs.SETTLEMENTGROUP <> 0
-      AND (t.VOUCHER = N'НП-110008767' OR o.VOUCHER = N'НП-110008767')
+      AND (t.VOUCHER = N'СЖ-000052123' OR o.VOUCHER = N'СЖ-000052123')
 ),
 actVouchers AS
 (
@@ -30,16 +30,30 @@ SELECT
     leg.VOUCHER        AS LegToVoucher,
     leg.POSTINGPROFILE AS LegToPostingProfile,
 
-    -- the settled documents of this row's settlement group(s), for display
     docs.DocVoucher,
     docs.DocProfile,
 
+    -- storno detection: within (voucher, profile) the transfer rows fully net out
     CASE
-        WHEN leg.RECID IS NULL      THEN ''             -- no leg (ordinary trans)
-        WHEN vt.TRANSTYPE <> 24     THEN 'n/a'          -- rule applies to transfers only
-        WHEN docs.DocVoucher IS NULL THEN 'NO DOC'      -- no real document in its group(s)
-        WHEN EXISTS                                     -- ANY advance whose profile the
-        (                                               -- pair does NOT touch -> misrouted
+        WHEN vt.TRANSTYPE IN (24, 83)
+         AND COUNT(*)          OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) > 1
+         AND SUM(vt.AMOUNTCUR) OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) = 0
+         AND SUM(vt.AMOUNTMST) OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) = 0
+        THEN 'CANCELED'
+        ELSE ''
+    END AS Canceled,
+
+    CASE
+        WHEN leg.RECID IS NULL       THEN ''            -- no leg (ordinary trans)
+        WHEN vt.TRANSTYPE <> 24      THEN 'n/a'         -- rule applies to transfers only
+        WHEN vt.TRANSTYPE IN (24, 83)                    -- storned pair -> exempt from the rule
+         AND COUNT(*)          OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) > 1
+         AND SUM(vt.AMOUNTCUR) OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) = 0
+         AND SUM(vt.AMOUNTMST) OVER (PARTITION BY vt.VOUCHER, vt.POSTINGPROFILE) = 0
+                                     THEN 'CANCELED'
+        WHEN docs.DocVoucher IS NULL THEN 'NO DOC'
+        WHEN EXISTS
+        (
             SELECT 1
             FROM VENDSETTLEMENT vsg
             JOIN VENDSETTLEMENT vs2
@@ -51,7 +65,7 @@ SELECT
             WHERE vsg.PARTITION = vt.PARTITION
               AND vsg.SETTLEMENTGROUP <> 0
               AND (vsg.TRANSRECID = vt.RECID OR vsg.OFFSETRECID = vt.RECID)
-              AND adv.TRANSTYPE NOT IN (3, 24, 83)      -- advances/invoices, not payment/machinery
+              AND adv.TRANSTYPE NOT IN (3, 24, 83)
               AND adv.VOUCHER <> vt.VOUCHER
               AND adv.POSTINGPROFILE NOT IN (vt.POSTINGPROFILE, leg.POSTINGPROFILE)
         )                            THEN 'WRONG PROFILE'
@@ -69,7 +83,6 @@ LEFT JOIN VENDTRANS leg
     AND leg.PARTITION = vt.PARTITION
 OUTER APPLY
 (
-    -- display-only: the settled documents in this row's group(s), concatenated
     SELECT
         STUFF((
             SELECT DISTINCT ', ' + d.VOUCHER
