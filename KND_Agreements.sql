@@ -27,6 +27,7 @@ on AgreementHeaderDefault.AgreementHeader = AgreementHeader.RECID
 
  
 where AgreementHeaderExt_RU.AgreementDate > @fromdate
- and AgreementHeaderExt_RU.AgreementDate <  @todate
+and AgreementHeaderExt_RU.AgreementDate <  @todate
 and AgreementHeader.AgreementState =1
-and AgreementHeaderExt_RU.CustPostingProfile !=N'Отгрузка'
+and (AgreementHeaderExt_RU.CustPostingProfile <> N'Отгрузка'
+or AgreementHeaderExt_RU.CustPostingProfile is null )
