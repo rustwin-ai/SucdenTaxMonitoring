@@ -25,6 +25,8 @@ on ((DIRPARTYTABLE.RecId = VENDTABLE.Party and VENDTABLE.Party > 0)
 join AgreementHeaderDefault
 on AgreementHeaderDefault.AgreementHeader = AgreementHeader.RECID
 
+ 
 where AgreementHeaderExt_RU.AgreementDate > @fromdate
  and AgreementHeaderExt_RU.AgreementDate <  @todate
 and AgreementHeader.AgreementState =1
+and AgreementHeaderExt_RU.CustPostingProfile !=N'Отгрузка'
