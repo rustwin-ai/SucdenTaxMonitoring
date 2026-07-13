@@ -5,8 +5,8 @@ declare @accontoff VARCHAR;
 
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
-set @account = parse('__account__' as datetime using 'ru');
-set @accontoff = parse('__accountoff__' as datetime using 'ru');
+set @account = parse('__account__');
+set @accontoff = parse('__accountoff__');
 
 
 
