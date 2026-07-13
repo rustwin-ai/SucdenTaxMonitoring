@@ -21,7 +21,7 @@ on CUSTTABLE.AccountNum = AgreementHeader.CUSTACCOUNT
 
 join DIRPARTYTABLE
 on ((DIRPARTYTABLE.RecId = VENDTABLE.Party and VENDTABLE.Party > 0)
- or (IRPARTYTABLE.RecId = CUSTTABLE.Party and CUSTTABLE.Party >0))
+ or (DIRPARTYTABLE.RecId = CUSTTABLE.Party and CUSTTABLE.Party >0))
 join AgreementHeaderDefault
 on AgreementHeaderDefault.AgreementHeader = AgreementHeader.RECID
 
