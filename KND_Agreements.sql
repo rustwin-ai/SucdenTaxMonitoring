@@ -1,3 +1,8 @@
+declare @fromdate datetime;
+declare @todate datetime;
+set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
+set @todate = parse('__TODATE__' as datetime using 'ru');
+
 select 
 PURCHNUMBERSEQUENCE as 'Код договора покупки', 
  CONCAT(AgreementHeader.VENDACCOUNT, AgreementHeader.CUSTACCOUNT) as 'Счет контрагента',
@@ -19,5 +24,6 @@ on DIRPARTYTABLE.RecId = VENDTABLE.Party
 join AgreementHeaderDefault
 on AgreementHeaderDefault.AgreementHeader = AgreementHeader.RECID
 
-where AgreementHeaderExt_RU.AgreementDate > '01.01.2026'
+where AgreementHeaderExt_RU.AgreementDate > @fromdate
+ and AgreementHeaderExt_RU.AgreementDate <  @todate
 and AgreementHeader.AgreementState =1
