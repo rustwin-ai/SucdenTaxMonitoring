@@ -5,7 +5,7 @@ set @todate = parse('__TODATE__' as datetime using 'ru');
 
 select 
 CONCAT(PURCHNUMBERSEQUENCE,SALESNUMBERSEQUENCE) as 'Код договора', 
- CONCAT(AgreementHeader.VENDACCOUNT, AgreementHeader.CUSTACCOUNT) as 'Счет контрагента',
+CONCAT(AgreementHeader.VENDACCOUNT, AgreementHeader.CUSTACCOUNT) as 'Счет контрагента',
 DIRPARTYTABLE.NAME as 'Название',  
 AgreementHeaderExt_RU.AgreementDate  as 'Дата',
 DocumentTitle as 'Заголовок документа',
