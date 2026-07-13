@@ -1,7 +1,14 @@
 declare @fromdate datetime;
 declare @todate datetime;
+declare @account VARCHAR;
+declare @accontoff VARCHAR;
+
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
+set @account = parse('__account__' as datetime using 'ru');
+set @accontoff = parse('__accountoff__' as datetime using 'ru');
+
+
 
 SELECT
     GJE.SUBLEDGERVOUCHER      AS Voucher,
@@ -30,5 +37,5 @@ JOIN MAINACCOUNT MACorr
     ON MACorr.RECID = DAVCCorr.MAINACCOUNT
 WHERE GJE.ACCOUNTINGDATE >= @fromdate
   AND GJE.ACCOUNTINGDATE <  DATEADD(DAY, 1, @todate)
-  AND MA.MAINACCOUNTID     LIKE N'90.20%'          -- the 90.20 leg, whichever side
-  AND MACorr.MAINACCOUNTID NOT LIKE N'90.90%';     -- excl. correspondence with 90.90
+  AND MA.MAINACCOUNTID     LIKE @account         
+  AND MACorr.MAINACCOUNTID NOT LIKE @accontoff;
