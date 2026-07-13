@@ -10,6 +10,13 @@ DIRPARTYTABLE.NAME as 'Название',
 AgreementHeaderExt_RU.AgreementDate  as 'Дата',
 DocumentTitle as 'Заголовок документа',
 case when AgreementHeader.VENDACCOUNT IS NOT NULL then N'П' else N'К' end as 'Тип'
+    CASE WHEN ROW_NUMBER() OVER
+         (
+             PARTITION BY CONCAT(AgreementHeader.VENDACCOUNT, AgreementHeader.CUSTACCOUNT)
+             ORDER BY     AgreementHeaderExt_RU.AgreementDate,
+                          AgreementHeader.RECID          -- tiebreak: same-day agreements
+         ) = 1
+         THEN 1 ELSE 0 END as 'Unic' 
 from AgreementHeader
 join AgreementHeaderExt_RU
 on AgreementHeaderExt_RU.AgreementHeader = AgreementHeader.RECID
