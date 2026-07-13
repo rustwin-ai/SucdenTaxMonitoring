@@ -4,7 +4,7 @@ set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
 
 select 
-PURCHNUMBERSEQUENCE as 'Код договора покупки', 
+CONCAT(PURCHNUMBERSEQUENCE,SALESNUMBERSEQUENCE) as 'Код договора', 
  CONCAT(AgreementHeader.VENDACCOUNT, AgreementHeader.CUSTACCOUNT) as 'Счет контрагента',
 DIRPARTYTABLE.NAME as 'Название',  
 AgreementHeaderExt_RU.AgreementDate  as 'Дата',
@@ -20,7 +20,7 @@ on CUSTTABLE.AccountNum = AgreementHeader.CUSTACCOUNT
 
 
 join DIRPARTYTABLE
-on DIRPARTYTABLE.RecId = VENDTABLE.Party
+on DIRPARTYTABLE.RecId in (VENDTABLE.Party, CUSTTABLE.Party)
 join AgreementHeaderDefault
 on AgreementHeaderDefault.AgreementHeader = AgreementHeader.RECID
 
