@@ -9,7 +9,6 @@ SET @todate = PARSE('__TODATE__' AS datetime USING 'ru');
 SET @account = '__account__';
 SET @accountoff = '__accountoff__';
 
-
 SELECT
     GJE.SUBLEDGERVOUCHER      AS Voucher,
     GJE.ACCOUNTINGDATE        AS AccountingDate,
