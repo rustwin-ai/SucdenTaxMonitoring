@@ -9,7 +9,7 @@ PURCHNUMBERSEQUENCE as 'Код договора покупки',
 DIRPARTYTABLE.NAME as 'Название',  
 AgreementHeaderExt_RU.AgreementDate  as 'Дата',
 DocumentTitle as 'Заголовок документа' 
-
+case when AgreementHeader.VENDACCOUNT IS NOT NULL then N'П' else N'К' end as 'Тип'
 from AgreementHeader
 join AgreementHeaderExt_RU
 on AgreementHeaderExt_RU.AgreementHeader = AgreementHeader.RECID
