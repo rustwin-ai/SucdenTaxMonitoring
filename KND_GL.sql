@@ -1,12 +1,13 @@
-declare @fromdate datetime;
-declare @todate datetime;
-declare @account VARCHAR;
-declare @accontoff VARCHAR;
+DECLARE @fromdate datetime;
+DECLARE @todate datetime;
+DECLARE @account varchar(20);
+DECLARE @accountoff varchar(20);
 
-set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
-set @todate = parse('__TODATE__' as datetime using 'ru');
-set @account = parse('__account__');
-set @accontoff = parse('__accountoff__');
+SET @fromdate = PARSE('__FROMDATE__' AS datetime USING 'ru');
+SET @todate = PARSE('__TODATE__' AS datetime USING 'ru');
+
+SET @account = '__account__';
+SET @accountoff = '__accountoff__';
 
 
 
