@@ -1,6 +1,9 @@
+declare @fromdate datetime;
+declare @todate datetime;
+set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
+set @todate = parse('__TODATE__' as datetime using 'ru');
+
 select FACTUREID, FACTUREEXTERNALID, ACCOUNTNAME, ACCOUNTNUM, FACTUREDATE, OPERATIONTYPECODES  from PURCHBOOKTRANS_RU
- 
-  
 join PURCHBOOKTABLE_RU
 on PURCHBOOKTABLE_RU.RECID = PURCHBOOKTRANS_RU.PURCHBOOKTABLE_RU
 where 
