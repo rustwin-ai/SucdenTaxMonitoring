@@ -5,6 +5,6 @@ set @todate = parse('__TODATE__' as datetime using 'ru');
 
 select AssetGroup, AccountNum, Name, AcquisitionDate from RAssetTable
 
-WHERE AcquisitionDate> @fromdate
-AND AcquisitionDate < @todate
+WHERE AcquisitionDate>= @fromdate
+AND AcquisitionDate <= @todate
 and AssetGroup in('0102','0106')
