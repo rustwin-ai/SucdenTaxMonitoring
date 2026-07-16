@@ -39,7 +39,7 @@ JOIN DIRPARTYTABLE
     ON DIRPARTYTABLE.RecId = COALESCE(VENDTABLE.Party, CUSTTABLE.Party)
 JOIN AgreementHeaderDefault
     ON AgreementHeaderDefault.AgreementHeader = ah.RECID
-WHERE ext.AgreementDate > @fromdate
-  AND ext.AgreementDate < @todate
+WHERE ext.AgreementDate >= @fromdate
+  AND ext.AgreementDate =< @todate
   AND ah.AgreementState = 1
   AND (ext.CustPostingProfile <> N'Отгрузка' OR ext.CustPostingProfile IS NULL);
