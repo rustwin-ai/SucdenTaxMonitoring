@@ -28,7 +28,7 @@ JOIN
     JOIN AgreementHeaderExt_RU ext2
         ON ext2.AgreementHeader = ah2.RECID
     WHERE ext2.AgreementDate >= @fromdate
-      AND ext2.AgreementDate =< @todate
+      AND ext2.AgreementDate <= @todate
       -- AND ah2.AgreementState = 1
       AND (ext2.CustPostingProfile <> N'Отгрузка' OR ext2.CustPostingProfile IS NULL)
 ) frst
@@ -40,6 +40,6 @@ JOIN DIRPARTYTABLE
 JOIN AgreementHeaderDefault
     ON AgreementHeaderDefault.AgreementHeader = ah.RECID
 WHERE ext.AgreementDate >= @fromdate
-  AND ext.AgreementDate =< @todate
+  AND ext.AgreementDate <= @todate
   -- AND ah.AgreementState = 1
   AND (ext.CustPostingProfile <> N'Отгрузка' OR ext.CustPostingProfile IS NULL);
