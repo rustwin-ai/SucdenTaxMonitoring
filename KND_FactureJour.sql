@@ -1,3 +1,5 @@
-select * from FactureJour_RU
+select 
+FACTUREID, FACTUREEXTERNALID, CustVendInvoiceAccount, FACTUREDATE
+from FactureJour_RU
 where InventProfileType in (41,43)
-and FACTUREDATE 
+  from FactureJour_RU
