@@ -6,5 +6,7 @@ set @todate = parse('__TODATE__' as datetime using 'ru');
 select 
 FACTUREID, FACTUREEXTERNALID, CustVendInvoiceAccount, FACTUREDATE
 from FactureJour_RU
-where InventProfileType in (41,43)
+where InventProfileType in (41, 43)
+FactureJour_RU.FACTUREDATE >=  @fromdate
+and FactureJour_RU.FACTUREDATE <=  @todate
  
