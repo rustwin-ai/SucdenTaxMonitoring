@@ -1,3 +1,9 @@
+declare @fromdate datetime;
+declare @todate datetime;
+set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
+set @todate = parse('__TODATE__' as datetime using 'ru');
+
+
 select 
 RASUnion.ASSETSTANDARDID as 'Вид учета ОС',
 RAT.ASSETGROUP as 'Группа ОС',
