@@ -4,8 +4,8 @@ declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
 
-select 
-'' as report_package_code, 
+select
+'' as report_package_code,
 year(SalesBookTrans_RU.FactureDate) as vat_year,
 format(month(SalesBookTrans_RU.FactureDate),'00') as vat_month,
 'true' as type_book,
@@ -48,22 +48,22 @@ case when SalesBookTrans_RU.PaymentDate > 01/01/1900 then CONVERT(char(10), Sale
 
 cast(0 as money) as amount_currency_document,
 cast(
-case when isNull(FactureTrans_RU.LineAmount, 0) = 0 then FACTUREJOUR_RU.FACTUREAMOUNT else 
-(FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + + FactureTrans_RU.VATMST22) * T.Koef 
-end
+(case when isNull(FactureTrans_RU.LineAmount, 0) = 0 then FACTUREJOUR_RU.FACTUREAMOUNT else
+(FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + + FactureTrans_RU.VATMST22) * T.Koef
+end) * advK.amountKoef
 as money) as  amount_income_rub_document,
 
-cast((FactureTrans_RU.LineAmountMST20) * T.Koef as money) as value_tax_sales_20,
-cast((FactureTrans_RU.LineAmountMST18) * T.Koef as money) as value_tax_sales_18,
-cast((FactureTrans_RU.LineAmountMST10) * T.Koef as money) as value_tax_sales_10,
-cast((FactureTrans_RU.LineAmountMST0) * T.Koef as money) as value_tax_sales_0,
+cast((FactureTrans_RU.LineAmountMST20) * T.Koef * advK.amountKoef as money) as value_tax_sales_20,
+cast((FactureTrans_RU.LineAmountMST18) * T.Koef * advK.amountKoef as money) as value_tax_sales_18,
+cast((FactureTrans_RU.LineAmountMST10) * T.Koef * advK.amountKoef as money) as value_tax_sales_10,
+cast((FactureTrans_RU.LineAmountMST0) * T.Koef * advK.amountKoef as money) as value_tax_sales_0,
 
 cast(0 as money) as amount_invoice_income_rub_vat,
 
-cast((FactureTrans_RU.VATMST20) * T.Koef  as money) as amount_vat_20,
-cast(FactureTrans_RU.VATMST18 * T.Koef as money) as amount_vat_18,
-cast((FactureTrans_RU.VATMST10) * T.Koef as money) as amount_vat_10,
-cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef as money) as value_tax_sales_free,
+cast((FactureTrans_RU.VATMST20) * T.Koef * advK.amountKoef  as money) as amount_vat_20,
+cast(FactureTrans_RU.VATMST18 * T.Koef * advK.amountKoef as money) as amount_vat_18,
+cast((FactureTrans_RU.VATMST10) * T.Koef * advK.amountKoef as money) as amount_vat_10,
+cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef * advK.amountKoef as money) as value_tax_sales_free,
 
 
 '' as reg_number_custom_declaration,
@@ -82,23 +82,25 @@ Upper(SalesBookTrans_RU.dataAreaId) as balance_unit_code,
 '' as declaration_line,
 '' as opreration_code,
 N'Российский рубль' as currency_name,
-cast((FactureTrans_RU.LineAmountMST7) * T.Koef as money) as value_tax_sales_7,
-cast((FactureTrans_RU.LineAmountMST5) * T.Koef as money) as value_tax_sales_5,
-cast(FactureTrans_RU.VATMST7 * T.Koef as money) as amount_vat_7,
-cast((FactureTrans_RU.VATMST5) * T.Koef as money) as amount_vat_5,
+cast((FactureTrans_RU.LineAmountMST7) * T.Koef * advK.amountKoef as money) as value_tax_sales_7,
+cast((FactureTrans_RU.LineAmountMST5) * T.Koef * advK.amountKoef as money) as value_tax_sales_5,
+cast(FactureTrans_RU.VATMST7 * T.Koef * advK.amountKoef as money) as amount_vat_7,
+cast((FactureTrans_RU.VATMST5) * T.Koef * advK.amountKoef as money) as amount_vat_5,
 '' as number_invoice_id,
 '' as number_invoice_rev_id,
 '' as number_invoice_cor_id,
 '' as number_invoice_rev_cor_id,
-'' as number_invoice_part_pay,
-'' as date_invoice_part_pay,
-'' as transaction_acc_report_package_code_part_pay,
-'' as transaction_acc_year_part_pay,
-'' as transaction_acc_number_part_pay,
-'' as transaction_acc_item_part_pay,
+-- S&D: advance / partial-payment invoice columns (spec cols 74-79), from the
+-- advance facture (advFac) and its GL (БУ) transaction (advGL). Non-amount only.
+isnull(advPay.ADVANCEFACTUREID, '') as number_invoice_part_pay,                                                       -- col 74
+case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.ADVANCEFACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
+'' as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
+advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
+advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId
+advGL.accItem   as transaction_acc_item_part_pay,     -- col 79: GJAE row number within the advance GJE
 '' as number_invoice_part_pay_id,
-cast((FactureTrans_RU.LineAmountMST22) * T.Koef as money)  as value_tax_sales_22,
-cast((FactureTrans_RU.VATMST22) * T.Koef  as money) as amount_vat_22
+cast((FactureTrans_RU.LineAmountMST22) * T.Koef * advK.amountKoef as money)  as value_tax_sales_22,
+cast((FactureTrans_RU.VATMST22) * T.Koef * advK.amountKoef as money) as amount_vat_22
 
 
 
@@ -115,21 +117,21 @@ left join CustInvoiceJour  on CustInvoiceJour.SalesId = CustInvoiceTrans.SalesId
 left join FACTURETRANS_RU as FTRTaxTrans on FTRTaxTrans.FactureId = FACTUREJOUR_RU.FactureId  and FTRTaxTrans.Module = FACTUREJOUR_RU.Module and SalesBookTrans_RU.TRANSTYPE = 8
 left join LEDGERJOURNALTRANS on LEDGERJOURNALTRANS.RecId = FTRTaxTrans.MARKUPREFRECID and FTRTaxTrans.MARKUPREFTABLEID =  212  and SalesBookTrans_RU.TRANSTYPE = 8
 
-left join SalesBookTable_RU as SalesBookTable_RU_Corr 
-on SalesBookTable_RU_Corr.RecId = SalesBookTrans_RU.CorrectedSalesBookTable_RU 
+left join SalesBookTable_RU as SalesBookTable_RU_Corr
+on SalesBookTable_RU_Corr.RecId = SalesBookTrans_RU.CorrectedSalesBookTable_RU
 left join Currency
-on Currency.CURRENCYCODE = SalesBookTrans_RU.CurrencyCode  
+on Currency.CURRENCYCODE = SalesBookTrans_RU.CurrencyCode
 
 left join CustTrans on CustTrans.Recid = SalesBookTrans_RU.PaymentRecIdRef and SalesBookTrans_RU.TRANSTYPE = 1
 
 left join  (
-    SELECT 
+    SELECT
 		 corr.MAINACCOUNT as corrMAINACCOUNT,
-                SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,		
+                SUC_TaxMonMapVATTable.TransTypeCode as TransTypeCode,
 		FactureTrans_RU.FactureId as 'FactureId',
 		FactureTrans_RU.Module as 'Module',
 		DimensionAttributeValueCombination.MAINACCOUNT as MAINACCOUNT,
-		TaxObjectName as TaxObjectName,	
+		TaxObjectName as TaxObjectName,
 		MARKUPREFRECID as MARKUPREFRECID,
 		MARKUPREFTABLEID as MARKUPREFTABLEID,
 		SUM(case when VatValue = 5 then VAT else 0 end) AS 'VAT5',
@@ -161,7 +163,7 @@ left join  (
 		sum(LineAmount) as 'LineAmount',
 		sum(LineAmountMST) as 'LineAmountMST',
                 sum(VAT) as VAT
-    FROM 
+    FROM
         FactureTrans_RU
 		join FACTUREJOUR_RU
 		on FACTUREJOUR_RU.FACTUREID = FactureTrans_RU.FACTUREID
@@ -174,44 +176,44 @@ left join  (
 	on DimensionAttributeValueCombination.RECID = TaxLedgerAccountGroup.TaxOutgoingLedgerDimension
 	left join DimensionAttributeValueCombination corr
 	on corr.RECID = TaxLedgerAccountGroup.TaxOutgoingOffsetLedgerDimension_RU
-	
+
     LEFT JOIN SUC_TaxMonMapVATTable
 	on SUC_TaxMonMapVATTable.PARTITION = FactureTrans_RU.PARTITION
-	and SUC_TaxMonMapVATTable.TransTypeCodeSign = 1	
+	and SUC_TaxMonMapVATTable.TransTypeCodeSign = 1
 	--and SUC_TaxMonMapVATTable.TransTypeCode = FACTUREJOUR_RU.OperationTypeCodes
 	and SUC_TaxMonMapVATTable.TAXCODE = FactureTrans_RU.TaxCode
-	and (SUC_TaxMonMapVATTable.LEDGERDIMENSION = TaxLedgerAccountGroup.TaxOutgoingLedgerDimension or 
-		(FactureTrans_RU.TaxCode like N'Экспорт%' and SUC_TaxMonMapVATTable.LEDGERDIMENSION = 0))		
-    GROUP BY 
+	and (SUC_TaxMonMapVATTable.LEDGERDIMENSION = TaxLedgerAccountGroup.TaxOutgoingLedgerDimension or
+		(FactureTrans_RU.TaxCode like N'Экспорт%' and SUC_TaxMonMapVATTable.LEDGERDIMENSION = 0))
+    GROUP BY
         FactureTrans_RU.FactureId, FactureTrans_RU.Module,  DimensionAttributeValueCombination.MAINACCOUNT, TaxObjectName, MARKUPREFRECID, MARKUPREFTABLEID,SUC_TaxMonMapVATTable.TransTypeCode , corr.MAINACCOUNT, SIGN(LineAmountMST)
-    
+
 ) FactureTrans_RU
 on FactureTrans_RU.FactureId = FACTUREJOUR_RU.FactureId
 and FactureTrans_RU.Module = FACTUREJOUR_RU.Module
-and FactureTrans_RU.TransTypeCode = SalesBookTrans_RU.OperationTypeCodes 
+and FactureTrans_RU.TransTypeCode = SalesBookTrans_RU.OperationTypeCodes
 and ((FactureTrans_RU.MARKUPREFRECID = FTRTaxTrans.MARKUPREFRECID and  FactureTrans_RU.MARKUPREFTABLEID = 212) or FactureTrans_RU.MARKUPREFTABLEID = 0)
 
 left join MAINACCOUNT MAF
 on MAF.RECID = FactureTrans_RU.MAINACCOUNT
 
  join GeneralJournalEntry
-on ((GeneralJournalEntry.SUBLEDGERVOUCHER = CustInvoiceJour.LedgerVOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = CustInvoiceJour.InvoiceDate and SalesBookTrans_RU.TRANSTYPE not in (1,8)) or 
-	(GeneralJournalEntry.SUBLEDGERVOUCHER = CustTrans.voucher  and GeneralJournalEntry.ACCOUNTINGDATE = CustTrans.TRANSDATE and SalesBookTrans_RU.TRANSTYPE = 1) or 
+on ((GeneralJournalEntry.SUBLEDGERVOUCHER = CustInvoiceJour.LedgerVOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = CustInvoiceJour.InvoiceDate and SalesBookTrans_RU.TRANSTYPE not in (1,8)) or
+	(GeneralJournalEntry.SUBLEDGERVOUCHER = CustTrans.voucher  and GeneralJournalEntry.ACCOUNTINGDATE = CustTrans.TRANSDATE and SalesBookTrans_RU.TRANSTYPE = 1) or
 	(GeneralJournalEntry.SUBLEDGERVOUCHER = LEDGERJOURNALTRANS.VOUCHER  and GeneralJournalEntry.ACCOUNTINGDATE = LEDGERJOURNALTRANS.TRANSDATE and SalesBookTrans_RU.TRANSTYPE = 8))
 
 join GeneralJournalAccountEntry
-on GeneralJournalAccountEntry.GeneralJournalEntry = 
+on GeneralJournalAccountEntry.GeneralJournalEntry =
 
-    CASE 
-        WHEN (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) and (GeneralJournalAccountEntry.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT 
-		and ((abs(FactureTrans_RU.VAT)  =  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount)) 
+    CASE
+        WHEN (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) and (GeneralJournalAccountEntry.MAINACCOUNT = FactureTrans_RU.MAINACCOUNT
+		and ((abs(FactureTrans_RU.VAT)  =  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount))
 		or (abs(FactureTrans_RU.VAT)  =  abs(GeneralJournalAccountEntry.TransactionCurrencyAmount))
 		or (/*Ф-006233 TSZ*/FACTUREJOUR_RU.FactureTax = abs(GeneralJournalAccountEntry.ReportingCurrencyAmount) and abs(FactureTrans_RU.VAT)  <  abs(GeneralJournalAccountEntry.ReportingCurrencyAmount))
 		)
 		) then GeneralJournalEntry.RecId
         when  (SalesBookTrans_RU.TaxAmountVAT20 = 0  and  SalesBookTrans_RU.TaxAmountVAT10 = 0) and GeneralJournalAccountEntry.PostingType in (31, 217) then GeneralJournalEntry.RecId
 		ELSE null
-    END 
+    END
 
 left join MAINACCOUNT MA
 on MA.RECID = GeneralJournalAccountEntry.MAINACCOUNT
@@ -238,18 +240,18 @@ left join GeneralJournalEntry RevGJE
 on (RevGJE.SUBLEDGERVOUCHER = RevCIJ.ledgerVoucher  and RevGJE.ACCOUNTINGDATE = RevCIJ.InvoiceDate )
 
 left join GeneralJournalAccountEntry RevGJAE
-on GeneralJournalAccountEntry.GeneralJournalEntry = 
- CASE 
+on GeneralJournalAccountEntry.GeneralJournalEntry =
+ CASE
         WHEN RevGJAE.GeneralJournalEntry > 0   and (RevGJAE.LedgerAccount like '68%' or RevGJAE.LedgerAccount like '19%') then RevGJAE.RecId
         ELSE null
-END 
+END
 
 cross apply (select case when (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID ) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t2
 cross apply (select case when (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t3
 cross apply (select case when (SalesBookTrans_RU.TaxAmountVAT20 != 0  or  SalesBookTrans_RU.TaxAmountVAT10 != 0) then (Select top 1 transaction_acc_item  from (select  ROW_NUMBER() OVER (PARTITION BY GJAE.GeneralJournalEntry ORDER BY GJAE.RecId) as transaction_acc_item, GJAE.Recid from GeneralJournalEntry GJE join GeneralJournalAccountEntry GJAE on GJAE.GeneralJournalEntry = GJE.RECID where GJE.RecId =  GeneralJournalEntry.RECID and GJAE.PostingType = 4 and GJAE.MAINACCOUNT = FactureTrans_RU.corrMAINACCOUNT ) t where t.Recid = GeneralJournalAccountEntry.RecId)  else '' end as transaction_acc_item) t4
 cross apply (select case when  t3.transaction_acc_item > 1 and t4.transaction_acc_item > 1  then 0 else 1 end as Koef) t
 
-  
+
 left join ISOCurrencyCode
 on ISOCurrencyCode.ISCCURRENCYCODEALPHA = Currency.CurrencyCode
 
@@ -257,6 +259,64 @@ on ISOCurrencyCode.ISCCURRENCYCODEALPHA = Currency.CurrencyCode
 outer  apply  (select (select top 1  SUC_TaxMonCounterpartyExportHistory.CounterpartyUniqueCode as company_code  from custTable join SUC_TaxMonCounterpartyExportHistory on SUC_TaxMonCounterpartyExportHistory.PARTY =  custTable.PARTY where custTable.AccountNum = SalesBookTrans_RU.AccountNum)
 						as company_code
 						)  company_code
+
+-- S&D: advance / prepayment facture link (SUC_FACTUREPAYMLINE).
+-- LEFT JOIN fans out ONE OUTPUT ROW PER PREPAYMENT line of the facture.
+-- advSeq = ROW_NUMBER per facture; drives amountKoef (advK) so amounts are only
+-- emitted on the first/only prepayment line (see amount columns in SELECT).
+--   SUC_FACTUREPAYMLINE.FACTUREJOUR      -> current FACTUREJOUR_RU.RECID
+--   SUC_FACTUREPAYMLINE.ADVANCEFACTUREID -> advance FACTUREJOUR_RU.FACTUREID (advFac)
+left join (
+    select
+        pl.FACTUREJOUR,
+        pl.PARTITION,
+        pl.ADVANCEFACTUREID,
+        pl.ADVANCEFACTUREDATE,
+        pl.ADVANCECORRFACTUREID,
+        pl.ADVANCECORRFACTUREDATE,
+        row_number() over (partition by pl.PARTITION, pl.FACTUREJOUR
+                           order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
+    from SUC_FACTUREPAYMLINE pl
+) advPay
+    on advPay.FACTUREJOUR = FACTUREJOUR_RU.RECID
+   and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
+
+left join FACTUREJOUR_RU advFac
+    on advFac.FACTUREID  = advPay.ADVANCEFACTUREID
+   and advFac.PARTITION  = FACTUREJOUR_RU.PARTITION
+   and advFac.DATAAREAID = FACTUREJOUR_RU.DATAAREAID
+
+-- amountKoef: 1 on the first prepayment line (or when there is no prepayment),
+-- 0 on every additional prepayment line -> zeroes ALL amount columns there.
+cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as amountKoef) advK
+
+-- S&D: GL (БУ) transaction of the ADVANCE facture, reached via advFac's ledger
+-- voucher, for transaction_acc_*_part_pay (cols 77-79). Built to mirror the main
+-- facture's transaction_acc_year / _number / _item logic.
+--   TODO(S&D): (a) confirm the advance facture voucher column — you described it
+--   as FACTUREJOUR_RU.Voucher; using LedgerVoucher to match how the main query
+--   links CustInvoiceJour.LedgerVoucher -> GeneralJournalEntry.SUBLEDGERVOUCHER.
+--   (b) confirm which GL account line is the advance VAT (76.АВ / '76%'?) so the
+--   correct GeneralJournalAccountEntry (and its item no.) is picked.
+outer apply (
+    select top 1
+        year(advGJE.ACCOUNTINGDATE) as accYear,
+        CONCAT(advGJE.SUBLEDGERVOUCHER, '_', convert(CHAR(10), advGJE.RecId)) as accNumber,
+        (
+            select top 1 seq from (
+                select ROW_NUMBER() over (partition by g2.GeneralJournalEntry order by g2.RecId) as seq, g2.RecId
+                from GeneralJournalAccountEntry g2
+                where g2.GeneralJournalEntry = advGJE.RecId
+            ) x where x.RecId = advGJAE.RecId
+        ) as accItem
+    from GeneralJournalEntry advGJE
+    join GeneralJournalAccountEntry advGJAE
+        on advGJAE.GeneralJournalEntry = advGJE.RecId
+       and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%')  -- TODO(S&D): advance VAT account
+    where advGJE.SUBLEDGERVOUCHER = advFac.LedgerVoucher
+      and advGJE.PARTITION        = advFac.PARTITION
+    order by advGJE.RecId, advGJAE.RecId
+) advGL
 
 
 where
