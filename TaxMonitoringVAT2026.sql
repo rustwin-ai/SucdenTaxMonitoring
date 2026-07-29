@@ -98,7 +98,7 @@ case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.A
 advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
 advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId
 advGL.accItem   as transaction_acc_item_part_pay,     -- col 79: GJAE row number within the advance GJE
-'' as number_invoice_part_pay_id,
+advGL.accNumber  as number_invoice_part_pay_id,
 cast((FactureTrans_RU.LineAmountMST22) * T.Koef * advK.amountKoef as money)  as value_tax_sales_22,
 cast((FactureTrans_RU.VATMST22) * T.Koef * advK.amountKoef as money) as amount_vat_22
 
