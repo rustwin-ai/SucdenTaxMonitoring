@@ -313,7 +313,8 @@ outer apply (
     join GeneralJournalAccountEntry advGJAE
         on advGJAE.GeneralJournalEntry = advGJE.RecId
        and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%')  -- TODO(S&D): advance VAT account
-    where advGJE.SUBLEDGERVOUCHER = advFac.LedgerVoucher
+    where advGJE.SUBLEDGERVOUCHER = advFac.Voucher
+	
       and advGJE.PARTITION        = advFac.PARTITION
     order by advGJE.RecId, advGJAE.RecId
 ) advGL
