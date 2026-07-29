@@ -274,6 +274,7 @@ left join (
         pl.ADVANCEFACTUREDATE,
         pl.ADVANCECORRFACTUREID,
         pl.ADVANCECORRFACTUREDATE,
+		pl.DataAreaId,
         row_number() over (partition by pl.PARTITION, pl.FACTUREJOUR
                            order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
     from SUC_FACTUREPAYMLINE pl
@@ -282,9 +283,9 @@ left join (
    and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
 
 left join FACTUREJOUR_RU advFac
-    on advFac.FACTUREID  = advPay.ADVANCEFACTUREID
-   and advFac.PARTITION  = FACTUREJOUR_RU.PARTITION
-   and advFac.DATAAREAID = FACTUREJOUR_RU.DATAAREAID
+    on advFac.FACTUREEXTERNALID  = advPay.ADVANCEFACTUREID
+   and advFac.PARTITION  = advPay.PARTITION
+   and advFac.DATAAREAID = advPay.DATAAREAID
 
 -- amountKoef: 1 on the first prepayment line (or when there is no prepayment),
 -- 0 on every additional prepayment line -> zeroes ALL amount columns there.
