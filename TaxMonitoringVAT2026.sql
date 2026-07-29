@@ -77,7 +77,7 @@ case when len (MA.MAINACCOUNTID) > 10 then REPLACE(MA.MAINACCOUNTID, '.', '')  e
 
 Upper(SalesBookTrans_RU.dataAreaId) as balance_unit_code,
 'false' as szpk_sign,
-'' as uniq_num,
+advPay.advSeq as uniq_num,
 '' as declaration_section,
 '' as declaration_line,
 '' as opreration_code,
