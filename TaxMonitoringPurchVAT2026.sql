@@ -182,7 +182,7 @@ N'Российский рубль' as currency_name,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST7) * T.Koef  * advK.amountKoef  as money) else  0 end as value_tax_sales_7,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST5) * T.Koef  * advK.amountKoef  as money) else  0 end as   value_tax_sales_5,
 
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast(FactureTrans_RU.VATMST7 as money) else  0 end as amount_vat_7,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST7) * T.Koef * advK.amountKoef as money) else  0 end as amount_vat_7,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST5) * T.Koef * advK.amountKoef as money) else  0 end as amount_vat_5,
 '' as number_invoice_id,
 '' as number_invoice_rev_id,
