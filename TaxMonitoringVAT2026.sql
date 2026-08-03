@@ -12,7 +12,7 @@ format(month(SalesBookTrans_RU.FactureDate),'00') as vat_month,
 case when isnull(SalesBookTable_RU_Corr.BookId, 'C') = 'C' then '' else SalesBookTable_RU_Corr.BookId end  as number_correction_book,
 FactureTrans_RU.TaxObjectName as tax_object,
 SalesBookTrans_RU.OperationTypeCodes as operation_type_code,
-'' as transaction_acc_report_package_code,
+Package.PackageCode as transaction_acc_report_package_code,
 year(GeneralJournalEntry.ACCOUNTINGDATE) as transaction_acc_year,
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId)) as  transaction_acc_number,
 t2.transaction_acc_item as  transaction_acc_item,
@@ -319,6 +319,23 @@ outer apply (
       and advGJE.PARTITION        = advFac.PARTITION
     order by advGJE.RecId, advGJAE.RecId
 ) advGL
+
+CROSS APPLY
+(
+    SELECT CONCAT(
+        UPPER(PURCHBOOKTRANS_RU.DATAAREAID),
+        'ACCY',
+        YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
+        'P',
+        CASE
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 1 AND 3 THEN '21'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 4 AND 6 THEN '31'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 7 AND 9 THEN '33'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
+        END,
+        'C0'
+    ) AS PackageCode
+) Package
 
 
 where
