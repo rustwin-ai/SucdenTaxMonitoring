@@ -159,6 +159,7 @@ where
 
 GeneralJournalEntry.ACCOUNTINGDATE >= @fromdate
 and GeneralJournalEntry.ACCOUNTINGDATE <= @todate
-and (MA.MainAccountId LIKE '[0-9]%' or MA.MainAccountId LIKE N'Н%')
+--and (MA.MainAccountId LIKE '[0-9]%' or MA.MainAccountId LIKE N'Н%')
+and (MA.MainAccountId LIKE '[0-9][0-9].%' or or MA.MainAccountId LIKE N'Н%')
 and GeneralJournalAccountEntry.AccountingCurrencyAmount !=0
 order by GeneralJournalEntry.RecId, GeneralJournalAccountEntry.RECID
