@@ -338,7 +338,7 @@ CROSS APPLY
     ) AS PackageCode
 ) Package
 
-CROSS APPLY
+outer APPLY
 (
     SELECT CONCAT(
         UPPER(PURCHBOOKTRANS_RU.DATAAREAID),
