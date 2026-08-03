@@ -16,7 +16,7 @@ format(month(GeneralJournalEntry.ACCOUNTINGDATE),'00')as transaction_tax_month,
 CONVERT(char(10), GeneralJournalEntry.ACCOUNTINGDATE, 126) as transaction_tax_date,
 '' as transaction_tax_correction_year,
 '' as transaction_tax_correction_month,
-'' as transaction_acc_report_package_code,
+Package.PackageCode as transaction_acc_report_package_code,
 year(GeneralJournalEntry.ACCOUNTINGDATE) as transaction_acc_year,
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId))as transaction_acc_number,
 ROW_NUMBER() OVER (PARTITION BY GeneralJournalAccountEntry.GeneralJournalEntry ORDER BY GeneralJournalAccountEntry.RecId) as  transaction_acc_item,
@@ -138,7 +138,22 @@ on (AgreementHeader.SalesNumberSequence = DAVAVContr.DISPLAYVALUE or AgreementHe
 left join AGREEMENTHEADEREXT_RU
 on AGREEMENTHEADEREXT_RU.AgreementHeader = AgreementHeader.RECID
 
-
+CROSS APPLY
+(
+    SELECT CONCAT(
+        'KSZ',
+        'ACCY',
+        YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
+        'P',
+        CASE
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 1 AND 3 THEN '21'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 4 AND 6 THEN '31'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 7 AND 9 THEN '33'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
+        END,
+        'C0'
+    ) AS PackageCode
+) Package
 
 where 
 
