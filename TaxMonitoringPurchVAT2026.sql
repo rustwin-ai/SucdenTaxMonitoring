@@ -485,7 +485,7 @@ from SUC_FACTUREPAYMLINE pl
    and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
 
 left join FACTUREJOUR_RU advFac
-    on advFac.FACTUREEXTERNALID  = advPay.ADVANCEFACTUREID
+   on advFac.RecId = advPay.FACTUREJOUR
    and advFac.PARTITION  = advPay.PARTITION
    and advFac.DATAAREAID = advPay.DATAAREAID
 
