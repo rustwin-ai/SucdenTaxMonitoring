@@ -490,6 +490,28 @@ left join FACTUREJOUR_RU advFac
    and advFac.DATAAREAID = advPay.DATAAREAID
 
 cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as amountKoef) advK
+
+outer apply (
+    select top 1
+	    advGJE.ACCOUNTINGDATE as ACCOUNTINGDATE,
+        year(advGJE.ACCOUNTINGDATE) as accYear,
+        CONCAT(advGJE.SUBLEDGERVOUCHER, '_', convert(CHAR(10), advGJE.RecId)) as accNumber,
+        (
+            select top 1 seq from (
+                select ROW_NUMBER() over (partition by g2.GeneralJournalEntry order by g2.RecId) as seq, g2.RecId
+                from GeneralJournalAccountEntry g2
+                where g2.GeneralJournalEntry = advGJE.RecId
+            ) x where x.RecId = advGJAE.RecId
+        ) as accItem
+    from GeneralJournalEntry advGJE
+    join GeneralJournalAccountEntry advGJAE
+        on advGJAE.GeneralJournalEntry = advGJE.RecId
+       and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%')  -- TODO(S&D): advance VAT account
+    where advGJE.SUBLEDGERVOUCHER = advFac.Voucher
+	
+      and advGJE.PARTITION        = advFac.PARTITION
+    order by advGJE.RecId, advGJAE.RecId
+) advGL
 	
 where 
 
