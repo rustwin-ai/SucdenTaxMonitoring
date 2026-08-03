@@ -451,6 +451,24 @@ cross apply (select case when  FACTUREJOUR_RU.FactureTax != 0 then cast ( cast((
 cross apply (select cast((case when PURCHBOOKTRANS_RU.TRANSTYPE != 2 then cast (case when s.Koef = 1 and FACTUREJOUR_RU.FactureTax  != 0 then cast(s.Koef as decimal (30,20)) else cast(m.Koef as decimal(30,20)) end  /* (cast( Exch.Exch as decimal(30,20)))*/ as decimal(30,20))  else 1  end ) as  DECIMAL(30, 20))as Koef) h
 cross apply (select cast((case when PURCHBOOKTRANS_RU.TRANSTYPE = 2 then cast ((case when s.Koef = 1 then m.Koef else ss.Koef end) as decimal(30,20)) else 1   end )as  DECIMAL(30, 20))as Koef) d
 
+CROSS APPLY
+(
+    SELECT CONCAT(
+        UPPER(PURCHBOOKTRANS_RU.DATAAREAID),
+        'ACCY',
+        YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
+        'P',
+        CASE
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 1 AND 3 THEN '21'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 4 AND 6 THEN '31'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 7 AND 9 THEN '33'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
+        END,
+        'C0'
+    ) AS PackageCode
+) Package
+
+	
 where 
 
 PURCHBOOKTABLE_RU.ClosingDate >=  @fromdate
