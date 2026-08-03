@@ -17,7 +17,6 @@ JOIN PURCHBOOKTABLE_RU PBTbl
 WHERE PBTbl.ClosingDate >= @fromdate
   AND PBTbl.ClosingDate < DATEADD(day, 1, @todate);
 
-
 /* 2. Prepare aggregated traceable info */
 IF OBJECT_ID('tempdb..#TraceableInfo') IS NOT NULL
     DROP TABLE #TraceableInfo;
