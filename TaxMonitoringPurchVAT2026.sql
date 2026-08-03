@@ -143,21 +143,21 @@ company_code.company_code as company_code,
 PURCHBOOKTRANS_RU.PaymDocumentNum as number_doc_pay,
 case when PURCHBOOKTRANS_RU.PaymentDate > 01/01/1900 then CONVERT(char(10), PURCHBOOKTRANS_RU.PaymentDate, 126) else '' end as date_doc_pay,
 	'643' as currency_document,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0  then 0 else cast((FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + FactureTrans_RU.VATMST22) * T.Koef / h.Koef as money) end as  amount_currency_document,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0  then 0 else cast((FactureTrans_RU.LineAmountMST + FactureTrans_RU.VATMST5 + FactureTrans_RU.VATMST7 + FactureTrans_RU.VATMST10 + FactureTrans_RU.VATMST18 + FactureTrans_RU.VATMST20 + FactureTrans_RU.VATMST22) * T.Koef * advK.amountKoef / h.Koef as money) end as  amount_currency_document,
 cast (0  as money) as  amount_income_rub_document,
 
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST20) * T.Koef  as money)  else  0 end  as value_tax_sales_20,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST18) * T.Koef as money) else  0 end as value_tax_sales_18,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST10) * T.Koef  as money) else  0 end as   value_tax_sales_10,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST0) * T.Koef  as money)  else  0 end as value_tax_sales_0,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST20) * T.Koef * advK.amountKoef as money)  else  0 end  as value_tax_sales_20,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST18) * T.Koef * advK.amountKoef as money) else  0 end as value_tax_sales_18,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST10) * T.Koef * advK.amountKoef  as money) else  0 end as   value_tax_sales_10,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST0) * T.Koef  * advK.amountKoef as money)  else  0 end as value_tax_sales_0,
 
 
-cast(case when PURCHBOOKTRANS_RU.OperationTypeCodes != '18' then  FactureTrans_RU.VATAmountMST   * T.Koef * d.Koef else 0 end as money) as amount_invoice_income_rub_vat,
+cast(case when PURCHBOOKTRANS_RU.OperationTypeCodes != '18' then  FactureTrans_RU.VATAmountMST   * T.Koef * d.Koef * advK.amountKoef else 0 end as money) as amount_invoice_income_rub_vat,
 
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST20) * T.Koef   as money) else  0 end as amount_vat_20,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast(FactureTrans_RU.VATMST18 as money)  else  0 end as amount_vat_18,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST10) * T.Koef  as money) else  0 end as amount_vat_10,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef  as money) else  0 end as value_tax_sales_free,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST20) * T.Koef   * advK.amountKoef  as money) else  0 end as amount_vat_20,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST18) * T.Koef   * advK.amountKoef as money)  else  0 end as amount_vat_18,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST10) * T.Koef   * advK.amountKoef as money) else  0 end as amount_vat_10,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMSTFree) * T.Koef  * advK.amountKoef as money) else  0 end as value_tax_sales_free,
 
 CASE 
     WHEN ISNULL(TI.strGTDNumber, '') = ''
@@ -179,11 +179,11 @@ Upper(PURCHBOOKTRANS_RU.dataAreaId) as balance_unit_code,
 '' as declaration_line,
 '' as opreration_code,
 N'Российский рубль' as currency_name,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST7) * T.Koef as money) else  0 end as value_tax_sales_7,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST5) * T.Koef as money) else  0 end as   value_tax_sales_5,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST7) * T.Koef  * advK.amountKoef  as money) else  0 end as value_tax_sales_7,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST5) * T.Koef  * advK.amountKoef  as money) else  0 end as   value_tax_sales_5,
 
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast(FactureTrans_RU.VATMST7 as money) else  0 end as amount_vat_7,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST5) * T.Koef as money) else  0 end as amount_vat_5,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST5) * T.Koef * advK.amountKoef as money) else  0 end as amount_vat_5,
 '' as number_invoice_id,
 '' as number_invoice_rev_id,
 '' as number_invoice_cor_id,
@@ -192,11 +192,11 @@ isnull(advPay.ADVANCEFACTUREID, '') as number_invoice_part_pay,                 
 case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.ADVANCEFACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
 case when advPay.FACTUREJOUR > 0 then  PaymentPackage.PackageCode  else ''  end as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
 advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
-advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId
+advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId 
 advGL.accItem   as transaction_acc_item_part_pay,     -- col 79: GJAE row number within the advance GJE
 advGL.accNumber  as number_invoice_part_pay_id,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST22) * T.Koef  as money)  else  0 end  as value_tax_sales_22,
-case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST22) * T.Koef   as money) else  0 end as amount_vat_22
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST22) * T.Koef * advK.amountKoef as money)  else  0 end  as value_tax_sales_22,
+case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST22) * T.Koef * advK.amountKoef  as money) else  0 end as amount_vat_22
 
 from PURCHBOOKTRANS_RU
 join PURCHBOOKTABLE_RU
