@@ -468,6 +468,28 @@ CROSS APPLY
     ) AS PackageCode
 ) Package
 
+left join (
+select
+	pl.FACTUREJOUR,
+	pl.PARTITION,
+	pl.ADVANCEFACTUREID,
+	pl.ADVANCEFACTUREDATE,
+	pl.ADVANCECORRFACTUREID,
+	pl.ADVANCECORRFACTUREDATE,
+	pl.DataAreaId,
+	row_number() over (partition by pl.PARTITION, pl.FACTUREJOUR
+					   order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
+from SUC_FACTUREPAYMLINE pl
+) advPay
+    on advPay.FACTUREJOUR = FACTUREJOUR_RU.RECID
+   and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
+
+left join FACTUREJOUR_RU advFac
+    on advFac.FACTUREEXTERNALID  = advPay.ADVANCEFACTUREID
+   and advFac.PARTITION  = advPay.PARTITION
+   and advFac.DATAAREAID = advPay.DATAAREAID
+
+cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as amountKoef) advK
 	
 where 
 
