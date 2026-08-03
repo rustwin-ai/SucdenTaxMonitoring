@@ -141,7 +141,7 @@ on AGREEMENTHEADEREXT_RU.AgreementHeader = AgreementHeader.RECID
 CROSS APPLY
 (
     SELECT CONCAT(
-        'KSZ',
+        UPPER(GeneralJournalEntry.DataAreaId),
         'ACCY',
         YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
         'P',
