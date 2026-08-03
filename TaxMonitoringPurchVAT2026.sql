@@ -517,7 +517,7 @@ outer APPLY
 (
 
     SELECT CONCAT(
-        UPPER(SalesBookTrans_RU.DATAAREAID),
+        UPPER(PurchBookTrans_RU.DATAAREAID),
         'ACCY',
         YEAR(advGL.ACCOUNTINGDATE),
         'P',
