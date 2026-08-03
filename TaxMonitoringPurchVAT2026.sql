@@ -481,7 +481,7 @@ select
 					   order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
 from SUC_FACTUREPAYMLINE pl
 ) advPay
-    on advPay.FACTUREJOUR = FACTUREJOUR_RU.RECID
+    on advPay.ADVANCEFACTUREID = FACTUREJOUR_RU.FactureId
    and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
 
 left join FACTUREJOUR_RU advFac
