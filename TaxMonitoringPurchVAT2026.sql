@@ -187,8 +187,8 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 '' as number_invoice_rev_id,
 '' as number_invoice_cor_id,
 '' as number_invoice_rev_cor_id,
-isnull(advPay.ADVANCEFACTUREID, '') as number_invoice_part_pay,                                                       -- col 74
-case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.ADVANCEFACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
+isnull(advFac.FACTUREEXTERNALID, '') as number_invoice_part_pay,                                                       -- col 74
+case when advFac.FACTUREDATE > '19000101' then CONVERT(char(10), advFac.FACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
 case when advPay.FACTUREJOUR > 0 then  PaymentPackage.PackageCode  else ''  end as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
 advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
 advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId 
@@ -476,17 +476,35 @@ select
 	pl.ADVANCECORRFACTUREID,
 	pl.ADVANCECORRFACTUREDATE,
 	pl.DataAreaId,
-	row_number() over (partition by pl.PARTITION, pl.FACTUREJOUR
+	row_number() over (partition by pl.PARTITION, pl.ADVANCEFACTUREID
 					   order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
 from SUC_FACTUREPAYMLINE pl
+join FACTUREJOUR_RU advFac
+   on advFac.RecId = pl.FACTUREJOUR
+   and advFac.PARTITION  = pl.PARTITION
+   and advFac.DATAAREAID = pl.DATAAREAID
+   and advFac.FACTUREDATE >= @fromdate
+   and advFac.FACTUREDATE <= @todate
+
 ) advPay
-    on advPay.ADVANCEFACTUREID = FACTUREJOUR_RU.FactureId
+    on advPay.ADVANCEFACTUREID = FACTUREJOUR_RU.FactureExternalId
    and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
 
 left join FACTUREJOUR_RU advFac
    on advFac.RecId = advPay.FACTUREJOUR
    and advFac.PARTITION  = advPay.PARTITION
    and advFac.DATAAREAID = advPay.DATAAREAID
+   and advFac.FACTUREDATE >= @fromdate
+   and advFac.FACTUREDATE <= @todate
+
+left join CustInvoiceJour CustInv
+   on CustInv.Invoiceid= advFac.FactureExternalId
+   and CustInv.INVOICEDATE = advFac.FACTUREDATE
+   and CustInv.InvoiceAccount = advFac.CustVendInvoiceAccount
+   and advFac.PARTITION  = advPay.PARTITION
+   and advFac.DATAAREAID = advPay.DATAAREAID
+
+
 
 cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as amountKoef) advK
 
@@ -506,8 +524,8 @@ outer apply (
     join GeneralJournalAccountEntry advGJAE
         on advGJAE.GeneralJournalEntry = advGJE.RecId
        and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%')  -- TODO(S&D): advance VAT account
-    where advGJE.SUBLEDGERVOUCHER = advFac.Voucher
-	
+    where advGJE.SUBLEDGERVOUCHER = CustInv.LEDGERVOUCHER
+		and advGJE.ACCOUNTINGDATE = CustInv.INVOICEDATE 	
       and advGJE.PARTITION        = advFac.PARTITION
     order by advGJE.RecId, advGJAE.RecId
 ) advGL
