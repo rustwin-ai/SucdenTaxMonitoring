@@ -301,6 +301,7 @@ cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as 
 --   correct GeneralJournalAccountEntry (and its item no.) is picked.
 outer apply (
     select top 1
+	    advGJE.ACCOUNTINGDATE as ACCOUNTINGDATE,
         year(advGJE.ACCOUNTINGDATE) as accYear,
         CONCAT(advGJE.SUBLEDGERVOUCHER, '_', convert(CHAR(10), advGJE.RecId)) as accNumber,
         (
