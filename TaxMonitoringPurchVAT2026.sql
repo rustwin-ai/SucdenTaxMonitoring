@@ -512,6 +512,24 @@ outer apply (
       and advGJE.PARTITION        = advFac.PARTITION
     order by advGJE.RecId, advGJAE.RecId
 ) advGL
+
+outer APPLY
+(
+
+    SELECT CONCAT(
+        UPPER(SalesBookTrans_RU.DATAAREAID),
+        'ACCY',
+        YEAR(advGL.ACCOUNTINGDATE),
+        'P',
+        CASE
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 1 AND 3 THEN '21'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 4 AND 6 THEN '31'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 7 AND 9 THEN '33'
+            WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
+        END,
+        'C0'
+	)AS PackageCode
+) PaymentPackage
 	
 where 
 
