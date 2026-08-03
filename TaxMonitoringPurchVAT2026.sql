@@ -188,13 +188,13 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 '' as number_invoice_rev_id,
 '' as number_invoice_cor_id,
 '' as number_invoice_rev_cor_id,
-'' as number_invoice_part_pay,
-'' as date_invoice_part_pay,
-'' as transaction_acc_report_package_code_part_pay,
-'' as transaction_acc_year_part_pay,
-'' as transaction_acc_number_part_pay,
-'' as transaction_acc_item_part_pay,
-'' as number_invoice_part_pay_id,
+isnull(advPay.ADVANCEFACTUREID, '') as number_invoice_part_pay,                                                       -- col 74
+case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.ADVANCEFACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
+case when advPay.FACTUREJOUR > 0 then  PaymentPackage.PackageCode  else ''  end as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
+advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
+advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId
+advGL.accItem   as transaction_acc_item_part_pay,     -- col 79: GJAE row number within the advance GJE
+advGL.accNumber  as number_invoice_part_pay_id,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.LineAmountMST22) * T.Koef  as money)  else  0 end  as value_tax_sales_22,
 case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.AmountInclVAT < 0 then cast((FactureTrans_RU.VATMST22) * T.Koef   as money) else  0 end as amount_vat_22
 
