@@ -302,6 +302,7 @@ cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as 
 outer apply (
     select top 1
 	    advGJE.ACCOUNTINGDATE as ACCOUNTINGDATE,
+		advGJAE.RecId as RecId,
         year(advGJE.ACCOUNTINGDATE) as accYear,
         CONCAT(advGJE.SUBLEDGERVOUCHER, '_', convert(CHAR(10), advGJE.RecId)) as accNumber,
         (
@@ -340,6 +341,8 @@ CROSS APPLY
 
 outer APPLY
 (
+	case when advGJAE.RecId > 0
+	then 
     SELECT CONCAT(
         UPPER(SalesBookTrans_RU.DATAAREAID),
         'ACCY',
@@ -352,6 +355,9 @@ outer APPLY
             WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
         END,
         'C0'
+	 else 
+		''
+	end
     ) AS PackageCode
 ) PaymentPackage
 
