@@ -3,7 +3,6 @@ declare @todate datetime;
 
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
-
 select
 '' as report_package_code,
 year(SalesBookTrans_RU.FactureDate) as vat_year,
@@ -94,7 +93,7 @@ cast((FactureTrans_RU.VATMST5) * T.Koef * advK.amountKoef as money) as amount_va
 -- advance facture (advFac) and its GL (БУ) transaction (advGL). Non-amount only.
 isnull(advPay.ADVANCEFACTUREID, '') as number_invoice_part_pay,                                                       -- col 74
 case when advPay.ADVANCEFACTUREDATE > '19000101' then CONVERT(char(10), advPay.ADVANCEFACTUREDATE, 126) else '' end as date_invoice_part_pay, -- col 75
-PaymentPackage.PackageCode  as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
+case when advPay.FACTUREJOUR > 0 then  PaymentPackage.PackageCode  else ''  end as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
 advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
 advGL.accNumber as transaction_acc_number_part_pay,   -- col 78: advance SUBLEDGERVOUCHER + '_' + GJE.RecId
 advGL.accItem   as transaction_acc_item_part_pay,     -- col 79: GJAE row number within the advance GJE
@@ -302,7 +301,6 @@ cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as 
 outer apply (
     select top 1
 	    advGJE.ACCOUNTINGDATE as ACCOUNTINGDATE,
-		advGJAE.RecId as RecId,
         year(advGJE.ACCOUNTINGDATE) as accYear,
         CONCAT(advGJE.SUBLEDGERVOUCHER, '_', convert(CHAR(10), advGJE.RecId)) as accNumber,
         (
@@ -341,8 +339,7 @@ CROSS APPLY
 
 outer APPLY
 (
-	case when advGJAE.RecId > 0
-	then 
+
     SELECT CONCAT(
         UPPER(SalesBookTrans_RU.DATAAREAID),
         'ACCY',
@@ -355,11 +352,9 @@ outer APPLY
             WHEN MONTH(GeneralJournalEntry.ACCOUNTINGDATE) BETWEEN 10 AND 12 THEN '34'
         END,
         'C0'
-	 else 
-		''
-	end
-    ) AS PackageCode
+	)AS PackageCode
 ) PaymentPackage
+
 
 
 where
