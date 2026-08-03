@@ -109,7 +109,7 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and FactureTrans_RU.LineAm
 case when isnull(PURCHBOOKTABLE_RU_Corr.BookId, 'C') = 'C' then '' else PURCHBOOKTABLE_RU_Corr.BookId end  as number_correction_book,
 FactureTrans_RU.TaxObjectName as tax_object,
 PURCHBOOKTRANS_RU.OperationTypeCodes/*FactureJour_RU.OperationTypeCodes*/ as operation_type_code,
-''as transaction_acc_report_package_code,
+Package.PackageCode as transaction_acc_report_package_code,
 year(GeneralJournalEntry.ACCOUNTINGDATE) as transaction_acc_year,
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId)) as  transaction_acc_number,
 GJAE_Row.transaction_acc_item as  transaction_acc_item,
