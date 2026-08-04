@@ -485,6 +485,14 @@ join FACTUREJOUR_RU advFac
    and advFac.DATAAREAID = pl.DATAAREAID
    and advFac.FACTUREDATE >= @fromdate
    and advFac.FACTUREDATE <= @todate
+	
+join CustInvoiceJour CustInv
+   on CustInv.Invoiceid= advFac.FactureExternalId
+   and CustInv.INVOICEDATE = advFac.FACTUREDATE
+   and CustInv.InvoiceAccount = advFac.CustVendInvoiceAccount
+   and advFac.PARTITION  = advPay.PARTITION
+   and advFac.DATAAREAID = advPay.DATAAREAID
+   and CustInvoiceJour.RecId = 
 
 ) advPay
     on advPay.ADVANCEFACTUREID = FACTUREJOUR_RU.FactureExternalId
