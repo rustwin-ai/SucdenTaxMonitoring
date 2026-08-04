@@ -453,7 +453,7 @@ CROSS APPLY
 (
     SELECT CONCAT(
         UPPER(PURCHBOOKTRANS_RU.DATAAREAID),
-        'ACCY',
+        '_ACCY',
         YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
         'P',
         CASE
@@ -499,7 +499,7 @@ outer APPLY
 
     SELECT CONCAT(
         UPPER(PurchBookTrans_RU.DATAAREAID),
-        'ACCY',
+        '_ACCY',
         YEAR(CustInv.TransDate),
         'P',
         CASE
