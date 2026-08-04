@@ -142,7 +142,7 @@ CROSS APPLY
 (
     SELECT CONCAT(
         UPPER(TransactionLog.DATAAREAID),
-        'ACCY',
+        '_ACCY',
         YEAR(GeneralJournalEntry.ACCOUNTINGDATE),
         'P',
         CASE
