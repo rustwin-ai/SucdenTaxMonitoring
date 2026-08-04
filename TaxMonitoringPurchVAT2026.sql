@@ -2,9 +2,10 @@ declare @fromdate datetime;
 declare @todate datetime;
 set @fromdate = parse('__FROMDATE__' as datetime using 'ru');
 set @todate = parse('__TODATE__' as datetime using 'ru');
-
+/* 1. Prepare traceable keys */
 IF OBJECT_ID('tempdb..#TraceKeys') IS NOT NULL
     DROP TABLE #TraceKeys;
+
 SELECT DISTINCT
     PBT.PURCHBOOKTABLE_RU,
     PBT.LINENUM AS PurchBookTransLineNum
@@ -185,7 +186,7 @@ case when PURCHBOOKTRANS_RU.OperationTypeCodes = '18' and PURCHBOOKTRANS_RU.Amou
 '' as number_invoice_rev_id,
 '' as number_invoice_cor_id,
 '' as number_invoice_rev_cor_id,
-isnull(CustInv.Invoice, '') as number_invoice_part_pay,                                                       -- col 74
+isnull(CustInv.Invoice + CustInv.DOCUMENTNUM, '') as number_invoice_part_pay,                                                       -- col 74
 case when CustInv.TransDate> '19000101' then CONVERT(char(10), CustInv.TRANSDATE, 126) else '' end as date_invoice_part_pay, -- col 75
 case when CustInv.RecId> 0 then  PaymentPackage.PackageCode  else ''  end as transaction_acc_report_package_code_part_pay,   -- col 76: empty (mirrors transaction_acc_report_package_code)
 advGL.accYear   as transaction_acc_year_part_pay,     -- col 77: year(advance GeneralJournalEntry.ACCOUNTINGDATE)
@@ -528,7 +529,7 @@ outer apply (
     from GeneralJournalEntry advGJE
     join GeneralJournalAccountEntry advGJAE
         on advGJAE.GeneralJournalEntry = advGJE.RecId
-       and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%')  -- TODO(S&D): advance VAT account
+       and (advGJAE.LedgerAccount like '76%' or advGJAE.LedgerAccount like '68%' or advGJAE.LedgerAccount like '62%')  -- TODO(S&D): advance VAT account
     where advGJE.SUBLEDGERVOUCHER = CustInv.VOUCHER
 		and advGJE.ACCOUNTINGDATE = CustInv.TRANSDATE 	
       and advGJE.PARTITION        = CustInv.PARTITION
@@ -552,6 +553,7 @@ outer APPLY
         'C0'
 	)AS PackageCode
 ) PaymentPackage
+	
 
 where 
 
