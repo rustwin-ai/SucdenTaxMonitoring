@@ -465,49 +465,7 @@ CROSS APPLY
         'C0'
     ) AS PackageCode
 ) Package
-/*
-left join (
-select
-	pl.FACTUREJOUR,
-	pl.PARTITION,
-	pl.ADVANCEFACTUREID,
-	pl.ADVANCEFACTUREDATE,
-	pl.ADVANCECORRFACTUREID,
-	pl.ADVANCECORRFACTUREDATE,
-	pl.DataAreaId,
-	row_number() over (partition by pl.PARTITION, pl.ADVANCEFACTUREID
-					   order by pl.ADVANCEFACTUREDATE, pl.RECID) as advSeq
-from SUC_FACTUREPAYMLINE pl
-join FACTUREJOUR_RU advFac
-   on advFac.RecId = pl.FACTUREJOUR
-   and advFac.PARTITION  = pl.PARTITION
-   and advFac.DATAAREAID = pl.DATAAREAID
-   and advFac.FACTUREDATE >= @fromdate
-   and advFac.FACTUREDATE <= @todate
-	
 
-) advPay
-    on advPay.ADVANCEFACTUREID = FACTUREJOUR_RU.FactureExternalId
-   and advPay.PARTITION   = FACTUREJOUR_RU.PARTITION
-
-left join FACTUREJOUR_RU advFac
-   on advFac.RecId = advPay.FACTUREJOUR
-   and advFac.PARTITION  = advPay.PARTITION
-   and advFac.DATAAREAID = advPay.DATAAREAID
-   and advFac.FACTUREDATE >= @fromdate
-   and advFac.FACTUREDATE <= @todate
-
-left join CustInvoiceJour CustInv
-   on CustInv.Invoiceid= advFac.FactureExternalId
-   and CustInv.INVOICEDATE = advFac.FACTUREDATE
-   and CustInv.InvoiceAccount = advFac.CustVendInvoiceAccount
-   and advFac.PARTITION  = advPay.PARTITION
-   and advFac.DATAAREAID = advPay.DATAAREAID
-
-
-
-cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as amountKoef) advK
-*/
 left join CustTrans CustInv
    on CustInv.RecId = PURCHBOOKTRANS_RU.InvoiceRecIdRef
    and PURCHBOOKTRANS_RU.TransType =2 
