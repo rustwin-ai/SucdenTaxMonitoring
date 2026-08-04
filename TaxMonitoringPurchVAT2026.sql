@@ -5,7 +5,6 @@ set @todate = parse('__TODATE__' as datetime using 'ru');
 
 IF OBJECT_ID('tempdb..#TraceKeys') IS NOT NULL
     DROP TABLE #TraceKeys;
-
 SELECT DISTINCT
     PBT.PURCHBOOKTABLE_RU,
     PBT.LINENUM AS PurchBookTransLineNum
