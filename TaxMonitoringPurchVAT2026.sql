@@ -510,6 +510,7 @@ cross apply (select case when isnull(advPay.advSeq, 1) = 1 then 1 else 0 end as 
 */
 left join CustTrans CustInv
    on CustInv.RecId = PURCHBOOKTRANS_RU.InvoiceRecIdRef
+   and PURCHBOOKTRANS_RU.TransType =2 
    and CustInv.PARTITION  = PURCHBOOKTRANS_RU.PARTITION
    and CustInv.DATAAREAID = PURCHBOOKTRANS_RU.DATAAREAID
 
