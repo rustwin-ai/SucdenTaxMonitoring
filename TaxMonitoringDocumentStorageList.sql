@@ -83,8 +83,10 @@ ON SUC_TaxMonCounterpartyExportHistory.Recid =
 (
 	SELECT  TOP 1 Recid 
 		FROM    SUC_TaxMonCounterpartyExportHistory
-		WHERE   (Party = CustTable.PARTY  and CustTable.PARTY > 0 ) or	(PARTY = vendTable.PARTY and vendTable.PARTY > 0) 
+		WHERE   (Party = CustTable.PARTY  and CustTable.PARTY > 0 ) or	(PARTY = vendTable.PARTY and vendTable.PARTY > 0)
+	order by recId desc
          )
+	
 
 
 
