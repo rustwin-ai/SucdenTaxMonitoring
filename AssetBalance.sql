@@ -17,7 +17,7 @@ cast (RASUnion.AcquisitionAdj as money) as 'Переоценка стоимос�
 cast (RASUnion.Revaluation as money) as 'Кап. ремонт',
 cast (RASUnion.Depreciation as money) as 'Амортизация',
 cast (RASUnion.DepreciationAdj as money) as 'Переоценка амортизации',
-cast (RASUnion.Acquisition + RASUnion.AcquisitionAdj + RASUnion.Revaluation + RASUnion.Depreciation + RASUnion.DepreciationAdj as money) as 'Остаточная стоимость',
+cast (RASUnion.Acquisition + RASUnion.AcquisitionAdj + RASUnion.Revaluation + RASUnion.Depreciation + RASUnion.DepreciationAdj  + RASUnion.disposalScrapValue + RASUnion.disposalSaleValue as money) as 'Остаточная стоимость',
 RASUnion.NEWLIFE as 'СПИ'
 
 from RASSETTABLE RAT
@@ -28,7 +28,7 @@ on CT.AccountNum = RAT.CUSTACCOUNT
 left join DIRPARTYTABLE DPT
 on DPT.RecId = CT.PARTY
 
-join (select ASSETID, RAS.AssetStandardId, AssetGroup, DisposalDate, CurrencyCode, t2.Depreciation, t2.DepreciationAdj, t2.Acquisition, t2.AcquisitionAdj,t2.Revaluation, NewLife,  AcquisitionPrice from RAssetStandards RAS
+join (select ASSETID, RAS.AssetStandardId, AssetGroup, DisposalDate, CurrencyCode, t2.Depreciation, t2.DepreciationAdj, t2.Acquisition, t2.AcquisitionAdj,t2.Revaluation, t2.disposalScrapValue, t2.disposalSaleValue, NewLife,  AcquisitionPrice from RAssetStandards RAS
 	   
 	    join (select AccountNum, AssetStandardId as StandardId,  
 		
@@ -36,7 +36,9 @@ join (select ASSETID, RAS.AssetStandardId, AssetGroup, DisposalDate, CurrencyCod
 		SUM (CASE WHEN AssetTransType  in (4) THEN AMOUNTCUR  ELSE 0  END) as  AcquisitionAdj,
 		SUM (CASE WHEN AssetTransType  in (2) THEN AMOUNTCUR  ELSE 0  END) as  Revaluation,
 		SUM (CASE WHEN AssetTransType  in (0) THEN AMOUNTCUR  ELSE 0  END) as  Depreciation,
-		SUM (CASE WHEN AssetTransType  in (1) THEN AMOUNTCUR  ELSE 0  END) as  DepreciationAdj
+		SUM (CASE WHEN AssetTransType  in (1) THEN AMOUNTCUR  ELSE 0  END) as  DepreciationAdj,
+		SUM (CASE WHEN AssetTransType  in (6) THEN AMOUNTCUR  ELSE 0  END) as  disposalScrapValue,
+		SUM (CASE WHEN AssetTransType  in (5) THEN AMOUNTCUR  ELSE 0  END) as  disposalSaleValue
 		from RAssetTrans 
 		where RAssetTrans.transDate <= @todate		
 		group by AccountNum, AssetStandardId) t2 on RAS.ASSETID = t2.ACCOUNTNUM and RAS.AssetStandardId = t2.StandardId
@@ -46,14 +48,16 @@ join (select ASSETID, RAS.AssetStandardId, AssetGroup, DisposalDate, CurrencyCod
 		where  RAS.AssetStandardId = N'Фин учет'	
 		
 		union 
-		select ASSETID, RASTAX.AssetStandardId, AssetGroup, DisposalDate, CurrencyCode, t3.Depreciation,t3.DepreciationAdj, t3.Acquisition, t3.AcquisitionAdj, t3.Revaluation,NewLife, AcquisitionPrice from RAssetStandards RASTAX
+		select ASSETID, RASTAX.AssetStandardId, AssetGroup, DisposalDate, CurrencyCode, t3.Depreciation,t3.DepreciationAdj, t3.Acquisition, t3.AcquisitionAdj, t3.Revaluation, t3.disposalScrapValue, t3.disposalSaleValue, NewLife, AcquisitionPrice from RAssetStandards RASTAX
 		
 		join (select AccountNum, AssetStandardId as StandardId,
 		SUM (CASE WHEN AssetTransType  in (3) THEN AMOUNTCUR  ELSE 0  END) as  Acquisition,
 		SUM (CASE WHEN AssetTransType  in (4) THEN AMOUNTCUR  ELSE 0  END) as  AcquisitionAdj,
 		SUM (CASE WHEN AssetTransType  in (2) THEN AMOUNTCUR  ELSE 0  END) as  Revaluation,
 		SUM (CASE WHEN AssetTransType in (0) THEN AMOUNTCUR  ELSE 0  END) as  Depreciation,
-		SUM (CASE WHEN AssetTransType in (1) THEN AMOUNTCUR  ELSE 0  END) as  DepreciationAdj
+		SUM (CASE WHEN AssetTransType in (1) THEN AMOUNTCUR  ELSE 0  END) as  DepreciationAdj,
+		SUM (CASE WHEN AssetTransType  in (6) THEN AMOUNTCUR  ELSE 0  END) as  disposalScrapValue,
+		SUM (CASE WHEN AssetTransType  in (5) THEN AMOUNTCUR  ELSE 0  END) as  disposalSaleValue
 		from RAssetTrans 
 		where RAssetTrans.transDate <= @todate
 		group by AccountNum, AssetStandardId) t3 
