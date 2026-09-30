@@ -18,28 +18,28 @@ case when Invoice.orig = 0 then  case when  DOCUVALUE.RECID > 0 then docuRef.SUC
 'false' as delete_sign
 
 from (
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1, DataAreaid as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1, dataAreaId as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 --and LEDGERVOUCHER = N'НК-10076941'
 
 UNION
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1, DataAreaid as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1, dataAreaId as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 
 
 union all 
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 0, DataAreaid as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 0, dataAreaId as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 
 
 union all
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  0, DataAreaid as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  0, dataAreaId as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
@@ -51,7 +51,7 @@ cross apply (SELECT top 1 SUBLEDGERVOUCHER, ACCOUNTINGDATE, RecId FROM GeneralJo
 CROSS APPLY
 (
     SELECT CONCAT(
-        UPPER(Invoice.DATAAREAID),
+        UPPER(Invoice.dataAreaId),
         'ACCY',
         YEAR(Invoice.INVOICEDATE),
         'P',
