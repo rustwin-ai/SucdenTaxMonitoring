@@ -8,7 +8,7 @@ select
 
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId)) as  transaction_acc_number,
 year(Invoice.INVOICEDATE) as transaction_acc_year,
-PackageCode.PackageCode as report_package_code,
+Package.PackageCode as report_package_code,
 
 -- case when Invoice.orig = 1 then  docuRef.SUC_TaxMonUUID else  invoicedocuRef.SUC_TaxMonUUID end  as unique_document_number,
 case when Invoice.orig = 0 then  case when  DOCUVALUE.RECID > 0 then docuRef.SUC_TaxMonUUID else null end 
@@ -18,28 +18,28 @@ case when Invoice.orig = 0 then  case when  DOCUVALUE.RECID > 0 then docuRef.SUC
 'false' as delete_sign
 
 from (
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1, dataAreaId as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, dataAreaId as dataAreaId, 1 as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 
 
 UNION
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1, dataAreaId as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  dataAreaId as dataAreaId, 1 as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 
 
 union all 
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 0, dataAreaId as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, dataAreaId as dataAreaId, 0 as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 
 
 union all
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  0, dataAreaId as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, dataAreaId as dataAreaId,  0 as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
