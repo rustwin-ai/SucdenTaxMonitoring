@@ -18,35 +18,52 @@ case when Invoice.orig = 0 then  case when  DOCUVALUE.RECID > 0 then docuRef.SUC
 'false' as delete_sign
 
 from (
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1 as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1, DataAreaid as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
 --and LEDGERVOUCHER = N'НК-10076941'
 
 UNION
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1 as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1, DataAreaid as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
---and LEDGERVOUCHER = N'НК-10076941'
+
 
 union all 
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 0 as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 0, DataAreaid as orig
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
---and LEDGERVOUCHER = N'НК-10076941'
+
 
 union all
-SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  0 as orig
+SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId,  0, DataAreaid as orig
 FROM CustInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
---and LEDGERVOUCHER = N'НК-10076941'
+
  ) Invoice
 
 cross apply (SELECT top 1 SUBLEDGERVOUCHER, ACCOUNTINGDATE, RecId FROM GeneralJournalEntry where GeneralJournalEntry.SUBLEDGERVOUCHER  = Invoice.LEDGERVOUCHER and GeneralJournalEntry.ACCOUNTINGDATE = Invoice.INVOICEDATE) as GeneralJournalEntry
+
+CROSS APPLY
+(
+    SELECT CONCAT(
+        UPPER(Invoice.DATAAREAID),
+        'ACCY',
+        YEAR(Invoice.INVOICEDATE),
+        'P',
+        CASE
+            WHEN MONTH(Invoice.INVOICEDATE) BETWEEN 1 AND 3 THEN '21'
+            WHEN MONTH(Invoice.INVOICEDATE) BETWEEN 4 AND 6 THEN '31'
+            WHEN MONTH(Invoice.INVOICEDATE) BETWEEN 7 AND 9 THEN '33'
+            WHEN MONTH(Invoice.INVOICEDATE) BETWEEN 10 AND 12 THEN '34'
+        END,
+        'C0'
+    ) AS PackageCode
+) Package
 
 
 left join DefaultDimensionView  as DFM
