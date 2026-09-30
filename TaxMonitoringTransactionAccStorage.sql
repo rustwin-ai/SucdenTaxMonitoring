@@ -22,7 +22,7 @@ SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, Recid, 491 as TableId, 1, d
 FROM VendInvoiceJour
 where (PostingProfile like '5%' or PostingProfile like '6%' or PostingProfile like '7%')
 and INVOICEDATE >= @fromdate  and INVOICEDATE <= @todate 
---and LEDGERVOUCHER = N'НК-10076941'
+
 
 UNION
 SELECT LEDGERVOUCHER, INVOICEDATE, DEFAULTDIMENSION, RecId, 62 as TableId, 1, dataAreaId as orig
