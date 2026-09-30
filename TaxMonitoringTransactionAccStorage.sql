@@ -8,7 +8,7 @@ select
 
 CONCAT(GeneralJournalEntry.SUBLEDGERVOUCHER, '_', convert(CHAR(10), GeneralJournalEntry.RecId)) as  transaction_acc_number,
 year(Invoice.INVOICEDATE) as transaction_acc_year,
-'' as report_package_code,
+PackageCode.PackageCode as report_package_code,
 
 -- case when Invoice.orig = 1 then  docuRef.SUC_TaxMonUUID else  invoicedocuRef.SUC_TaxMonUUID end  as unique_document_number,
 case when Invoice.orig = 0 then  case when  DOCUVALUE.RECID > 0 then docuRef.SUC_TaxMonUUID else null end 
