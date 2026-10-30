@@ -22,6 +22,7 @@ from RASSETTABLE
 left join RASSETMOVEHIST
     on RASSETMOVEHIST.RecId = (select TOP 1 RecId from RASSETMOVEHIST
                                where RASSETMOVEHIST.ACCOUNTNUM = RASSETTABLE.accountnum
+                                and RASSETMOVEHIST.NEWLOCATION != ""
                                order by ChangeDate desc)
 left join RAssetLocation
     on RAssetLocation.LOCATION = RASSETMOVEHIST.NEWLOCATION
